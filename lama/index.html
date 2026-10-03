@@ -28,6 +28,8 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--btn)}
 .btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
 .btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;background:var(--btn);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
 .btns label:active{transform:scale(.92)}.btns label:has(input:focus-visible){outline:3px solid var(--ink)}
+.sub{display:none;grid-template-columns:1fr 1fr;gap:8px;width:100%}.sub.on{display:grid}
+.sub label{display:grid;place-items:center;position:relative;font-size:10px;padding:10px 4px;border-radius:12px;background:var(--btn);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}.sub label:active{transform:scale(.95)}
 #msg{font-size:11px;min-height:1.4em;text-align:center}
 </style>
 </head>
@@ -40,6 +42,7 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--btn)}
   <div class="btns">
     <label id="b-feed"><input type="checkbox" switch class="sw"><span>Heu</span></label><label id="b-play"><input type="checkbox" switch class="sw"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw"><span>Bürste</span></label>
   </div>
+  <div class="sub" id="pflege"><label id="b-brush"><input type="checkbox" switch class="sw"><span>Bürsten</span></label><label id="b-color"><input type="checkbox" switch class="sw"><span>Fellfarbe</span></label></div>
 </div>
 
 <script>
@@ -55,9 +58,13 @@ function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
 // Werte
 const clamp=v=>Math.max(0,Math.min(100,v));
 const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Flausch'};
-const DEF={satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,geb:Date.now(),t:Date.now()};
+const DEF={fell:0,satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,geb:Date.now(),t:Date.now()};
 let st=DEF;try{st={...DEF,...JSON.parse(localStorage.getItem('lama')||'{}')}}catch(e){}
 function save(){st.t=Date.now();try{localStorage.setItem('lama',JSON.stringify(st))}catch(e){}}
+// Fellfarben: [Name, Fell, Schatten, Auge]
+const FELL=[['Karamell','#d9b48a','#9c7652','#1d1d1f'],['Schneeweiß','#f4efe6','#bdb4a4','#1d1d1f'],['Schokobraun','#8a5a3a','#5a3a24','#f4efe6'],['Silbergrau','#a3a3a8','#6b6b70','#1d1d1f'],['Nachtschwarz','#3c3632','#1f1b18','#f4efe6'],['Zuckerrosa','#f0b3c4','#c07c8f','#1d1d1f']];
+function fell(){const c=FELL[st.fell%FELL.length],d=document.documentElement.style;d.setProperty('--lama',c[1]);d.setProperty('--lama2',c[2]);d.setProperty('--eye',c[3])}
+fell();
 function say(t){$('msg').textContent=t}
 // Pro Minute: Werte sinken (im Schlaf steigt Energie). Abwesenheit wird nachgeholt, max. 24 h.
 function tick(min){
@@ -143,6 +150,10 @@ function frame(){
       o.zu=true;
       for(let k=0;k<5;k++)out+=`<circle cx="${cx+2+k*2.2}" cy="${19-((t*1.4+k*3)%14)}" r=".8" fill="none" stroke="var(--ink)" stroke-width=".25"/>`;
       break}
+    case'color':{ // Glitzersterne rund ums Lama
+      o.zu=true;o.turn=Math.sin(t/A.len*Math.PI*2)*.5;
+      for(let k=0;k<6;k++){const a=k+t*.4,sx=cx+7+Math.cos(a)*8,sy=15+Math.sin(a)*5;px(sx,sy,'sun',.8,.8)}
+      break}
     case'turn':{o.turn=spin*Math.sin(t/A.len*Math.PI)*.75;break}
     case'pet':{o.zu=true;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,dir>0?cx+9:cx,4-t*.4);break}
     case'graze':{o.graze=1;o.mund=(t>>1)&1;break}
@@ -170,9 +181,12 @@ $('pet').onclick=()=>st.laune<25&&!st.schlaf?act({laune:3},'Pfft! Lama ist belei
 $('b-feed').onclick=()=>act({satt:25,sauber:-5},'Mampf! Frisches Heu.',2,'eat',20);
 $('b-play').onclick=()=>act({laune:20,energie:-10,satt:-5},'Hopp … Kopfball!',3,'play',26);
 $('b-sleep').onclick=()=>{st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
-$('b-clean').onclick=()=>{if(!st.schlaf)st.poo=0;act({sauber:40},'Bürst, bürst – schön flauschig!',2,'clean',16)};
+// Bürste öffnet zwei Möglichkeiten: Bürsten oder Fellfarbe wechseln
+$('b-clean').onclick=()=>{$('pflege').classList.toggle('on')};
+$('b-brush').onclick=()=>{$('pflege').classList.remove('on');if(!st.schlaf)st.poo=0;act({sauber:40},'Bürst, bürst – schön flauschig!',2,'clean',16)};
+$('b-color').onclick=()=>{if(st.schlaf){say('Pssst, das Lama schläft.');return}st.fell=(st.fell+1)%FELL.length;fell();act({laune:5},'Neue Fellfarbe: '+FELL[st.fell][0]+'!',2,'color',20)};
 // Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
-for(const id of ['pet','b-feed','b-play','b-sleep','b-clean']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn()}}
+for(const id of ['pet','b-feed','b-play','b-sleep','b-clean','b-brush','b-color']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn()}}
 setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();save()},30000);
 render();save();frame();{const m=mood();if(m)say(m)}
 </script>
