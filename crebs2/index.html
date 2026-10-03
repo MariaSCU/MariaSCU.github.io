@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Crebs II">
+<meta name="theme-color" content="#d97757">
+<style>*{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}</style>
+<title>Crebs II</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
+<style>
+/* Layout: schlichte Spalte – Himmel-Fenster mit Crebs, darunter Werte und runde Tasten */
+:root{--bg:#f4f6f9;--fg:#24262b;--sky:#e3eef7;--sun:#f2c14e;--cloud:#ffffff;--ink:#2f333a;--line:#c9d3de;--eye:#1d1d1f;--crab:#d97757;--crab2:#a9533a;--egg:#fbf6ea;--night:#1b2232;--moon:#efe9cf;--snow:#ffffff;--rain:#7c9cc4;--grau:#c9d4df;--blass:#e9b9a4;--font:"Silkscreen",ui-monospace,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161b;--fg:#e4e6ea;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--ink:#d5d9e0;--line:#323b4c;--grau:#2a3242;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14161b;--fg:#e4e6ea;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--ink:#d5d9e0;--line:#323b4c;--grau:#2a3242;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);display:grid;place-items:center;padding-inline:16px}
+.egg{width:min(340px,100%);display:grid;gap:14px;justify-items:center;padding-block:24px}
+h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--crab)}
+.lcd{width:100%;max-width:100%;background:var(--sky);border-radius:18px;overflow:hidden}
+.tap{position:relative;display:block;cursor:pointer}
+#scene{width:100%;display:block;shape-rendering:crispEdges}
+.sw{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.stats{width:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:10px;align-items:center}
+.bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;border:0;background:var(--crab);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
+.mehr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+.mehr label{position:relative;font-size:10px;padding:9px 14px;border-radius:999px;border:2px solid var(--crab);color:var(--fg);cursor:pointer;user-select:none;-webkit-user-select:none}
+.mehr label:active{transform:scale(.94)}.mehr label:has(input:focus-visible){outline:3px solid var(--ink)}
+.btns label:active{transform:scale(.92)}.btns label:has(input:focus-visible){outline:3px solid var(--ink)}
+#msg{font-size:11px;min-height:1.4em;text-align:center}
+.form{display:flex;gap:8px;width:100%}.form[hidden]{display:none}
+.form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
+.form input[type=time]{flex:0 1 auto}
+#link{font-size:10px;word-break:break-all;text-align:center;user-select:all;-webkit-user-select:all}
+.form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--crab);color:#fff}
+</style>
+
+</head>
+<body>
+<div class="egg">
+  <h1 id="name">CREBS II</h1>
+  <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" aria-label="Crebs streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
+  <div id="msg">Hallo! Ich bin Crebs.</div>
+  <form id="grussform" class="form" hidden><input id="gr" maxlength="60" placeholder="Dein Gruß" autocomplete="off" aria-label="Gruß"><button>Link teilen</button></form>
+  <div id="link" hidden></div>
+  <form id="erform" class="form" hidden><input id="ez" type="time" value="17:00" aria-label="Uhrzeit"><button>In den Kalender</button></form>
+  <form id="nameform" class="form" hidden><input id="nm" maxlength="12" placeholder="Wie soll ich heißen?" autocomplete="off" aria-label="Name"><button>Fertig</button></form>
+  <div class="stats" id="stats"></div>
+  <div class="btns">
+    <label id="b-feed"><input type="checkbox" switch class="sw"><span>Futter</span></label><label id="b-play"><input type="checkbox" switch class="sw"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw"><span>Putz</span></label>
+  </div>
+  <div class="mehr">
+    <label id="b-med"><input type="checkbox" switch class="sw"><span>Medizin</span></label>
+    <label id="g-ball"><input type="checkbox" switch class="sw"><span>Ballspiel</span></label><label id="g-fisch"><input type="checkbox" switch class="sw"><span>Fische fangen</span></label><label id="g-rennen"><input type="checkbox" switch class="sw"><span>Wettrennen</span></label><label id="b-hut"><input type="checkbox" switch class="sw"><span>Hüte</span></label><label id="b-gruss"><input type="checkbox" switch class="sw"><span>Gruß</span></label><label id="b-erin"><input type="checkbox" switch class="sw"><span>Erinnerung</span></label>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// Haptik: Der echte Fingertipp auf ein Schalter-Feld löst am iPhone den 1. Tick aus.
+// Weitere Ticks werden nachgeschoben – das klappt nicht auf jedem Gerät. Android: vibrate.
+function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
+function buzz(n=1,gap=120){
+  if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_, i)=>i%2?gap:40));return}
+  for(let i=1;i<n;i++)setTimeout(pulse,i*gap);
+}
+// Leiser Tick bei Szenen, die Crebs von selbst spielt (iPhone lässt das evtl. nicht zu)
+function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
+
+// Werte
+const clamp=v=>Math.max(0,Math.min(100,v));
+const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Sauber'};
+const DEF={satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,ei:true,taps:0,name:'',pfSum:0,pfMin:0,variante:'',stufe:'baby',nacht:false,krank:false,krankMin:0,punkte:0,hut:'',feierTag:'',geb:Date.now(),t:Date.now()};
+let st=DEF;try{st={...DEF,...JSON.parse(localStorage.getItem('crebs2')||'{}')}}catch(e){}
+function save(){st.t=Date.now();try{localStorage.setItem('crebs2',JSON.stringify(st))}catch(e){}}
+function say(t){$('msg').textContent=t}
+// Pro Minute: Werte sinken (im Schlaf steigt Energie). Abwesenheit wird nachgeholt, max. 24 h.
+function tick(min){
+  if(st.ei)return;
+  const z=st.schlaf;
+  st.satt=clamp(st.satt-min*(z?.3:.6));st.laune=clamp(st.laune-min*(z?.1:.5));
+  st.sauber=clamp(st.sauber-min*.3);st.energie=clamp(st.energie+min*(z?2:-.4));
+  if(Math.random()<min/20&&st.poo<3)st.poo++;
+  st.sauber=clamp(st.sauber-st.poo*min*.5);
+  // Wachstum (R2): Pflege = Durchschnitt der Werte über die Zeit; entscheidet die Erwachsenen-Variante
+  st.pfSum+=min*(st.satt+st.laune+st.energie+st.sauber)/4;st.pfMin+=min;
+  if(stage()==='gross'&&!st.variante){const p=st.pfMin?st.pfSum/st.pfMin:70;st.variante=p>=65?'stern':p>=40?'normal':'zottel'}
+  // Krankheit (R6): erst nach einer Stunde Vernachlässigung; Crebs stirbt nie
+  const schlecht=['satt','laune','sauber'].filter(k=>st[k]<20).length>=2||(st.sauber<15&&st.poo>=2);
+  if(!st.krank){st.krankMin=schlecht?st.krankMin+min:Math.max(0,st.krankMin-min);if(st.krankMin>=60){st.krank=true;say('Mir ist schlecht …')}}
+  else st.laune=clamp(st.laune-min*.5);
+  // Tag und Nacht (R3): nachts schläft Crebs von selbst, morgens wacht er auf
+  const n=isNight(new Date());
+  if(n&&!st.nacht){st.schlaf=true;say('Gute Nacht!')}
+  if(!n&&st.nacht){st.schlaf=false;say('Guten Morgen!')}
+  st.nacht=n;
+  if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
+}
+tick(Math.min(1440,(Date.now()-st.t)/60000));
+function isNight(d){const h=d.getHours();return h>=21||h<7}
+// Wetter nach Jahreszeit (R4): pro Stunde fest ausgewürfelt, damit es nicht ständig wechselt
+function weather(d){
+  const m=d.getMonth(),r=((d.getFullYear()*400+m*31+d.getDate())*24+d.getHours())*2654435761%1000/1000;
+  if(m===11||m<2)return r<.6?'schnee':'klar';
+  if(m<5)return r<.4?'regen':'klar';
+  if(m<8)return r<.15?'regen':'klar';
+  return r<.5?'blaetter':r<.8?'regen':'klar';
+}
+// Geburtstag (R5): Jahrestag des Schlüpfens; dazwischen jede volle Woche eine kleine Feier
+function feier(d){
+  if(st.ei)return null;const g=new Date(st.geb),tage=Math.floor((d-st.geb)/864e5);
+  if(d.getMonth()===g.getMonth()&&d.getDate()===g.getDate()&&d.getFullYear()>g.getFullYear())return'geburtstag';
+  return tage>0&&tage%7===0?'woche':null;
+}
+function feierCheck(){
+  const d=new Date(),fe=feier(d),key=d.toDateString();if(!fe||st.feierTag===key)return;st.feierTag=key;
+  const n=st.name||'Crebs',j=new Date().getFullYear()-new Date(st.geb).getFullYear(),w=Math.floor((d-st.geb)/864e5/7);
+  say(fe==='geburtstag'?`Alles Gute zum ${j}. Geburtstag, ${n}!`:`Hurra, ${n} ist ${w} Woche${w>1?'n':''} alt!`);
+}
+function stage(){const d=(Date.now()-st.geb)/864e5;return d<1?'baby':d<4?'kind':'gross'}
+const STUFE={baby:'Baby',kind:'Kind',gross:'Groß'},SCALE={baby:.6,kind:.8,gross:1};
+function render(){
+  const sg=st.ei?st.stufe:stage();if(sg!==st.stufe){st.stufe=sg;say(sg==='kind'?'Ich bin gewachsen!':'Ich bin jetzt groß!')}
+  const tage=Math.floor((Date.now()-st.geb)/864e5);
+  document.querySelector('#b-sleep span').textContent=st.schlaf?'Weck':'Schlaf';
+  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'} · ${STUFE[st.stufe]}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('');
+}
+function mood(){
+  if(st.krank&&!st.schlaf)return'Mir ist schlecht … Medizin?';
+  const low=Object.keys(NAMES).filter(k=>st[k]<25);
+  if(st.schlaf)return'Zzz …';
+  return low.length?{satt:'Ich hab Hunger!',laune:'Mir ist langweilig …',energie:'So müde …',sauber:'Igitt, putz mich!'}[low[0]]:null;
+}
+
+// Zeichnen: Szene aus Pixeln, 32 × 24 Felder
+const svg=$('scene');let out='';
+const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
+const sprite=(rows,x,y)=>rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(ch==='X')px(x+i,y+j,'crab');else if(ch==='K')px(x+i,y+j,'ink');else if(ch==='E')px(x+i,y+j,'egg');else if(ch==='D')px(x+i,y+j,'eye')}));
+// Ei (R1): bekommt mit jedem Tippen einen Riss mehr
+const EGG=["...DDD...","..DEEED..",".DEEEEED.",".DEXEEED.","DEEEEEEED","DEEEXEEED","DEEEEEEED","DEEXEEXED",".DEEEEED.","..DDDDD.."];
+const CRACKS=[[4,1],[5,2],[4,3],[3,4],[2,4],[6,3],[7,4]];
+function drawEgg(){
+  const w=anim?.type==='wobble'?(anim.t%2?1:-1):0,r=EGG.map(a=>[...a]);
+  CRACKS.slice(0,Math.min(CRACKS.length,st.taps*2)).forEach(([x,y])=>r[y][x]='D');
+  sprite(r.map(a=>a.join('')),11.5+w,11);
+}
+const FISH=[".KK.K","KKKKK",".KK.K"],BALL=[".K.","KKK",".K."],HEART=[".K.K.","KKKKK",".KKK.","..K.."],POO=["..K..",".KKK.","KKKKK"];
+// Crebs im Stil des Claude-Maskottchens: kastiger Körper, Schlitzaugen, Ärmchen, vier Beinchen
+function crab(x,y,o){
+  const r=["..XXXXXXXXX..","..XKXXXXXKX..","..XKXXXXXKX..","..XXXXXXXXX..","..XXXXXXXXX..","..XXXXXXXXX..","..X.X...X.X..",o.leg?".X..X...X..X.":"..X.X...X.X.."].map(s=>[...s]);
+  if(o.zu){r[1][3]=r[1][9]='X'}
+  r[o.armL][0]=r[o.armL][1]='X';r[o.armR][11]=r[o.armR][12]='X';
+  const R=r.map(a=>a.join('')),a=o.turn||0,d=Math.sin(a)*2.6,sx=Math.cos(a);
+  const sc=SCALE[st.stufe]||1,v=st.stufe==='gross'?st.variante:'';
+  const g=(dx,dy,col,front)=>{out+=`<g transform="translate(${x+6.5*(1-sx*sc)+dx} ${y+8*(1-sc)+dy}) scale(${sx*sc} ${sc})">`;
+    R.forEach((row,j)=>[...row].forEach((c,i)=>{if(c==='X'||(c==='K'&&!front))px(i,j,st.krank&&front?'blass':v==='zottel'?'crab2':col);else if(c==='K')px(i,j,'eye')}));
+    // Erwachsenen-Varianten: Stern = Fühler mit goldenen Spitzen, Zottel = Haarbüschel
+    if(front&&v==='stern'){px(3,-2,'sun');px(3,-1,'crab');px(9,-2,'sun');px(9,-1,'crab')}
+    if(front&&st.hut){const h=HATS[st.hut];h.rows.forEach((r,j)=>[...r].forEach((c,i)=>{if(HC[c])px(h.x+i,h.y+j,HC[c])}))}
+    if(front&&v==='zottel'){px(4,-1,'crab2');px(6,-1,'crab2');px(8,-1,'crab2')}
+    out+='</g>'};
+  for(let k=Math.abs(d);k>.01;k-=.4)g(-Math.sign(d)*k,-k*.35,'crab2',false);
+  g(0,0,'crab',true);
+}
+let anim=null,cx=9,dir=1,f=0,spin=1,game=null;
+// Minispiele (R7): jedes Antippen der Szene ist ein Spielzug (und vibriert)
+// Hüte (R8): mit Spielpunkten freispielen
+const HATS={kappe:{p:10,n:'Kappe',x:2,y:-2,rows:["..BBBBB..","BBBBBBBBB"]},krone:{p:25,n:'Krone',x:4,y:-2,rows:["G.G.G","GGGGG"]},
+  zylinder:{p:40,n:'Zylinder',x:4,y:-3,rows:[".SSS.",".SSS.","SSSSS"]},blume:{p:60,n:'Blume',x:8,y:-3,rows:[".P.","PGP",".P."]}};
+const HC={B:'rain',G:'sun',S:'eye',P:'blass'};
+const frei=pt=>Object.keys(HATS).filter(k=>pt>=HATS[k].p);
+function nextHat(){
+  const f=frei(st.punkte);
+  if(!f.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zur ${HATS[k].n}!`);return}
+  const liste=['',...f];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
+  say(st.hut?`Schick! Die ${HATS[st.hut].n}.`:'Ohne Hut.');save();
+}
+function canPlay(){
+  if(st.ei){say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');return false}
+  if(st.schlaf){say('Pssst, Crebs schläft.');return false}
+  if(st.krank){say('Mir geht es nicht gut zum Spielen …');return false}
+  return true}
+function startGame(type){
+  if(game||!canPlay())return;anim=null;
+  game={type,t:0,score:0,n:0,x:9,tx:9,me:1,rx:1};newRound();
+  say({ball:'Tipp, wenn der Ball bei Crebs ist!',fisch:'Tipp dorthin, wo der Fisch hinfällt!',rennen:'Tipp ganz schnell, um zu rennen!'}[type]);
+}
+function newRound(){Object.assign(game,{bx:31,by:17,hit:false,fx:3+Math.random()*24,fy:-3})}
+function endGame(){
+  const g=game;game=null;const pts=g.type==='rennen'?(g.win?10:3):g.score;
+  const vorher=frei(st.punkte).length;st.punkte+=pts;const neu=frei(st.punkte);st.laune=clamp(st.laune+10+pts*2);st.energie=clamp(st.energie-10);
+  buzz(3);say(`Spiel vorbei: ${pts} Punkte!`+(g.type==='rennen'?(g.win?' Gewonnen!':' Knapp verloren!'):'')+(neu.length>vorher?` Neuer Hut: ${HATS[neu[neu.length-1]].n}!`:''));render();save();
+}
+function gameTap(ev){
+  const g=game;
+  if(g.type==='ball'&&!g.hit&&g.bx>=14&&g.bx<=19){g.hit=true;g.score++;say('Schuss! '+g.score)}
+  if(g.type==='fisch'){const r=svg.getBoundingClientRect?.()||{left:0,width:320};g.tx=Math.max(0,Math.min(19,((ev?.clientX??r.left+r.width/2)-r.left)/r.width*32-6.5))}
+  if(g.type==='rennen'&&!g.done)g.me+=1;
+}
+const RIVAL=["..KKKKKKKKK..","..K.KKKKK.K..","KKKKKKKKKKKKK","..KKKKKKKKK..","..K.K...K.K.."];
+function drawGame(){
+  const g=game,o={leg:(f>>1)&1,armL:3,armR:3,zu:false};g.t++;
+  if(g.type==='ball'){
+    crab(3,13,{...o,armR:g.hit&&g.bx<22?2:3});
+    if(!g.hit){g.bx-=.9;if(g.bx<11){g.n++;say('Daneben!');newRound()}}
+    else{g.bx+=1.6;g.by-=1;if(g.bx>33){g.n++;newRound()}}
+    sprite(BALL,Math.round(g.bx),Math.round(g.by));
+    if(g.n>=6)endGame();
+  }
+  if(g.type==='fisch'){
+    g.x+=Math.sign(g.tx-g.x)*Math.min(1.5,Math.abs(g.tx-g.x));
+    crab(g.x,13,{...o,armL:2,armR:2});g.fy+=.6;sprite(FISH,Math.round(g.fx),Math.round(g.fy));
+    if(g.fy>=11){if(Math.abs(g.fx+2.5-(g.x+6.5))<4.5){g.score++;say('Gefangen! '+g.score)}else say('Platsch, daneben!');g.n++;newRound()}
+    if(g.n>=8)endGame();
+  }
+  if(g.type==='rennen'){
+    px(29,3,'line',.3,18);px(29.3,3,'crab',1.6,1);px(0,10,'line',29,.25);
+    if(!g.done)g.rx+=.45;sprite(RIVAL,Math.round(g.rx),5);crab(g.me,13,o);
+    if(!g.done&&(g.me>=17||g.rx>=17)){g.done=true;g.win=g.me>=17;g.end=g.t}
+    if(g.done&&g.t-g.end>6)endGame();
+  }
+  if(game&&g.type!=='rennen')out+=`<text x="1" y="3" font-size="2.4" fill="var(--ink)" font-family="var(--font)">${g.score}</text>`;
+}
+function start(type,len){anim={type,t:0,len}}
+function frame(){
+  out='';f++;
+  const A=anim,t=A?A.t:0,z=st.schlaf;
+  let y=13,o={leg:0,armL:3,armR:3,zu:z||f%40<2},after=()=>{};
+  const jetzt=new Date(),nacht=isNight(jetzt),wt=weather(jetzt);
+  if(nacht){out+=`<rect width="32" height="24" fill="var(--night)"/><circle cx="27" cy="4.5" r="2.2" fill="var(--moon)"/><circle cx="28.1" cy="3.9" r="1.9" fill="var(--night)"/>`;
+    [[3,3],[8,6],[14,2],[19,5],[23,9],[11,10]].forEach(([x,y],k)=>{if((f>>3)%7!==k)px(x,y,'moon',.3,.3)})}
+  else if(wt==='schnee'||wt==='regen')out+=`<rect width="32" height="24" fill="var(--grau)"/>`;
+  else if(wt==='klar'||wt==='blaetter')out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+  const wolke=wx=>out+=`<g fill="var(--cloud)" opacity="${nacht?.25:1}"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`;
+  wolke(((f*.04+16)%46)-9);if(wt==='regen'||wt==='schnee')wolke(((f*.03+38)%46)-9);
+  if(wt==='schnee')px(0,20.6,'snow',32,.6);
+  px(0,21,'line',32,.25);
+  if(st.ei){drawEgg();if(anim&&++anim.t>=anim.len)anim=null;svg.innerHTML=out;return}
+  for(let i=0;i<st.poo;i++)sprite(POO,28-i*4,18);
+  if(game){drawGame();svg.innerHTML=out;return}
+  if(!A&&!z){
+    if(f%3===0){cx+=dir;if(cx<1||cx>17)dir*=-1}
+    o.leg=(f>>1)&1;
+    if(f%50===0&&Math.random()<.7){const k=['laptop','kick','turn'][Math.floor(Math.random()*3)];spin=-spin;start(k,k==='turn'?30:40);say({laptop:'Crebs tippt am Laptop …',kick:'Crebs kickt mit dem Ball!',turn:'Crebs schaut sich um …'}[k])}
+  }
+  switch(A?.type){
+    case'eat':{ // Fisch fällt von oben, Crebs fängt und mampft
+      o.armL=o.armR=2;
+      if(t<8)sprite(FISH,cx+4,t*1.3-3);
+      else{sprite(FISH.map(r=>r.slice(0,Math.max(0,5-(t-8)))),cx+4,8);if(t%2)y=12;o.zu=t%2===0}
+      break}
+    case'play':{ // Ball fliegt rein, Crebs schießt ihn weg
+      let bx,by;
+      if(t<10){const p=t/10;bx=31-(18-cx)*p;by=19-14*p*(1-p)*1.6}
+      else{const p=(t-10)/10;bx=cx+13+p*20;by=19-18*p}
+      if(t<20)after=()=>sprite(BALL,Math.round(bx),Math.round(by));
+      if(t>=9&&t<13){y=12;o.leg=1;o.armR=2}
+      if(t>=20){o.armL=o.armR=t%2?2:3;y=t%2?12:13}
+      break}
+    case'clean':{ // Seifenblasen steigen auf
+      o.armL=o.armR=t%2?2:3;
+      for(let k=0;k<5;k++)out+=`<circle cx="${cx+2+k*2.2}" cy="${20-((t*1.4+k*3)%14)}" r=".8" fill="none" stroke="var(--ink)" stroke-width=".25"/>`;
+      break}
+    case'turn':{o.turn=spin*Math.sin(t/A.len*Math.PI)*.75;break}
+    case'med':{ // Pille schwebt zu Crebs, dann Glitzern
+      if(t<8)sprite(["KXX"],cx+5,4+t*.8);else{o.armL=o.armR=2;for(let k=0;k<4;k++)px(cx+2+k*3,12-(t-8)*.5-(k%2),'sun',.5,.5)}
+      break}
+    case'wave':{o.armL=t%4<2?2:3;o.armR=t%4<2?3:2;o.turn=Math.sin(t*.3)*.3;break}
+    case'pet':{o.armL=o.armR=2;o.zu=true;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,cx+4,9-t*.6);break}
+    case'laptop':{ // tippen: Ärmchen abwechselnd auf der Tastatur
+      o.armL=f%2?3:4;o.armR=f%2?4:3;y=13;tock();
+      after=()=>{px(cx+2,17,'ink',9,3);px(cx+3,17.7,'sky',7,1.6);px(cx+6,18,'crab');px(cx+1,20,'ink',11,.7)};
+      if(t===A.len-1)say('Fertig getippt!');
+      break}
+    case'kick':{ // Ball auf dem Kopf jonglieren
+      const h=Math.abs(Math.sin(t*.45))*6;
+      after=()=>sprite(BALL,cx+5,10-h);
+      if(h<1.5){y=12;o.armL=o.armR=2;if(t%7===0)tock()}
+      if(t===A.len-1)say('Tor! ⚽');
+      break}
+  }
+  if(st.krank&&A?.type!=='med')after=(a=>()=>{a();sprite([".KKK.","K.K.K","KKKKK",".K.K."],cx+4,6+Math.sin(f*.3)*.6)})(after);
+  if(z){y=14;for(let k=0;k<2;k++)out+=`<text x="${cx+11+k*2}" y="${12-((f*.3+k*3)%6)}" font-size="${3-k}" fill="var(--${isNight(new Date())?'moon':'ink'})" font-family="var(--font)">z</text>`}
+  const fe=feier(jetzt);
+  if(fe){out+='<g id="feier">';const map={G:'sun',B:'rain',P:'egg',X:'crab'};
+    [".G.G.G.",".B.B.B.","PPPPPPP","XXXXXXX","PPPPPPP"].forEach((r,j)=>[...r].forEach((c,i)=>{if(map[c])px(24+i,16+j,map[c])}));out+='</g>'}
+  crab(cx,y,o);after();
+  if(fe)for(let k=0;k<12;k++)px((k*5.3+Math.sin(f*.1+k)*2+32)%32,(k*3.1+f*.35)%21,['crab','sun','rain','blass'][k%4],.5,.5);
+  for(let k=0;k<14;k++){const sx=(k*7.3)%32,sy=(k*5.1+f*(wt==='regen'?.9:.15))%22;
+    if(wt==='schnee')px((sx+Math.sin(f*.05+k))%32,sy,'snow',.45,.45);
+    if(wt==='regen')px(sx,sy,'rain',.15,.9);
+    if(wt==='blaetter'&&k<6)px((sx+f*.08)%32,(k*3.7+f*.1)%21,k%2?'crab2':'sun',.6,.6)}
+  if(A&&++A.t>=A.len)anim=null;
+  svg.innerHTML=out;
+}
+setInterval(frame,150);
+
+// Handlungen
+function act(ch,txt,n,type,len){
+  if(st.ei){say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');return}
+  if(st.schlaf){say('Pssst, Crebs schläft.');return}
+  for(const k in ch)st[k]=clamp(st[k]+ch[k]);
+  buzz(n);start(type,len);say(txt);render();save();
+}
+$('pet').onclick=ev=>{
+  if(game)return gameTap(ev);
+  if(!st.ei)return act({laune:5},'Klick-klack! ♥',1,'pet',10);
+  st.taps++;start('wobble',6);
+  if(st.taps<5){say(['Es wackelt …','Knack!','Da bewegt sich was!','Gleich ist es so weit!'][st.taps-1]);save();return}
+  st.ei=false;st.geb=Date.now();buzz(3);start('pet',12);say('Hallo! Wie soll ich heißen?');askName();render();save();
+};
+// Name (R5)
+function showName(){$('name').textContent=(st.name||'Crebs').toUpperCase()}
+function askName(){$('nameform').hidden=false}
+$('nameform').onsubmit=e=>{e.preventDefault();st.name=($('nm').value||'').trim().slice(0,12)||'Crebs';$('nameform').hidden=true;showName();say(`Ich heiße jetzt ${st.name}!`);save()};
+$('b-feed').onclick=()=>act({satt:25,sauber:-5},'Mampf! Ein Fisch.',2,'eat',16);
+$('b-play').onclick=()=>st.krank&&!st.ei?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Fang! … und weg damit!',3,'play',26);
+$('b-sleep').onclick=()=>{st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-clean').onclick=()=>{if(!st.schlaf)st.poo=0;act({sauber:40},'Blubb, blitzblank!',2,'clean',16)};
+// Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
+$('b-med').onclick=()=>{
+  if(st.ei||st.schlaf)return act({},'',1);
+  if(!st.krank){buzz(1);say('Ich bin doch gesund!');return}
+  st.krank=false;st.krankMin=0;act({laune:10},'Bäh! … Aber jetzt geht es mir besser!',2,'med',16);
+};
+$('b-hut').onclick=()=>{if(st.ei)return say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');nextHat()};
+// Gruß-Link (R9): der Gruß steckt im Link selbst, kein Server nötig
+const grussLink=text=>location.origin+location.pathname+'?von='+encodeURIComponent(st.name||'Crebs')+'&gruss='+encodeURIComponent(text);
+function toggle(id){for(const f of ['grussform','erform'])$(f).hidden=f===id?!$(f).hidden:true;$('link').hidden=true}
+$('b-gruss').onclick=()=>{if(st.ei)return say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');toggle('grussform');say('Schreib einen Gruß für dein Geschwisterchen!')};
+$('grussform').onsubmit=e=>{
+  e.preventDefault();const url=grussLink(($('gr').value||'').trim()||'Hallo!');
+  $('link').textContent=url;$('link').hidden=false;$('grussform').hidden=true;
+  if(navigator.share)navigator.share({title:`Gruß von ${st.name||'Crebs'}`,url}).catch(()=>{});
+  else navigator.clipboard?.writeText(url).then(()=>say('Link kopiert! Jetzt in WhatsApp einfügen.'),()=>say('Link unten antippen und kopieren.'));
+};
+function grussLesen(){
+  const q=new URLSearchParams(location.search),g=q.get('gruss');if(!g)return;
+  if(!st.ei)start('wave',30);say(`${q.get('von')||'Jemand'} grüßt: ${g.slice(0,60)}`);
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+}
+// Erinnerung (R10): tägliche Fütterungszeit als Kalendereintrag – kein Server nötig
+function ics(zeit,heute=new Date()){
+  const [h,m]=zeit.split(':'),d=heute.getFullYear()+String(heute.getMonth()+1).padStart(2,'0')+String(heute.getDate()).padStart(2,'0'),n=st.name||'Crebs';
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Crebs//DE','BEGIN:VEVENT',`UID:crebs-${st.geb}@mariascu.github.io`,`DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').slice(0,15)}Z`,
+    `DTSTART:${d}T${h}${m}00`,'DURATION:PT10M','RRULE:FREQ=DAILY',`SUMMARY:${n} füttern`,`URL:${location.origin+location.pathname}`,
+    'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY',`DESCRIPTION:${n} hat Hunger!`,'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+$('b-erin').onclick=()=>{toggle('erform');say('Wann soll ich dich jeden Tag erinnern?')};
+$('erform').onsubmit=e=>{e.preventDefault();$('erform').hidden=true;say('Tipp auf „Hinzufügen“ im Kalender.');location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics($('ez').value||'17:00'))};
+$('g-ball').onclick=()=>startGame('ball');$('g-fisch').onclick=()=>startGame('fisch');$('g-rennen').onclick=()=>startGame('rennen');
+for(const id of ['pet','b-feed','b-play','b-sleep','b-clean','b-med','g-ball','g-fisch','g-rennen','b-hut','b-gruss','b-erin']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
+setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();feierCheck();save()},30000);
+showName();if(!st.ei&&!st.name)askName();
+render();feierCheck();save();frame();{const m=mood();if(st.ei)say('Ein Ei! Tipp es an …');else if(m)say(m)}
+grussLesen();
+</script>
+</body></html>
