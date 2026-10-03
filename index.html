@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Crebs">
+<meta name="theme-color" content="#d97757">
+<style>*{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}</style>
+<title>Crebs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
+<style>
+/* Layout: schlichte Spalte – Himmel-Fenster mit Crebs, darunter Werte und runde Tasten */
+:root{--bg:#f4f6f9;--fg:#24262b;--sky:#e3eef7;--sun:#f2c14e;--cloud:#ffffff;--ink:#2f333a;--line:#c9d3de;--eye:#1d1d1f;--crab:#d97757;--crab2:#a9533a;--font:"Silkscreen",ui-monospace,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161b;--fg:#e4e6ea;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--ink:#d5d9e0;--line:#323b4c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14161b;--fg:#e4e6ea;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--ink:#d5d9e0;--line:#323b4c;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);display:grid;place-items:center;padding-inline:16px}
+.egg{width:min(340px,100%);display:grid;gap:14px;justify-items:center;padding-block:24px}
+h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--crab)}
+.lcd{width:100%;max-width:100%;background:var(--sky);border-radius:18px;overflow:hidden}
+.tap{position:relative;display:block;cursor:pointer}
+#scene{width:100%;display:block;shape-rendering:crispEdges}
+.sw{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.stats{width:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:10px;align-items:center}
+.bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;border:0;background:var(--crab);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
+.btns label:active{transform:scale(.92)}.btns label:has(input:focus-visible){outline:3px solid var(--ink)}
+#msg{font-size:11px;min-height:1.4em;text-align:center}
+</style>
+
+</head>
+<body>
+<div class="egg">
+  <h1>CREBS</h1>
+  <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" aria-label="Crebs streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
+  <div id="msg">Hallo! Ich bin Crebs.</div>
+  <div class="stats" id="stats"></div>
+  <div class="btns">
+    <label id="b-feed"><input type="checkbox" switch class="sw"><span>Futter</span></label><label id="b-play"><input type="checkbox" switch class="sw"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw"><span>Putz</span></label>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// Haptik: Der echte Fingertipp auf ein Schalter-Feld löst am iPhone den 1. Tick aus.
+// Weitere Ticks werden nachgeschoben – das klappt nicht auf jedem Gerät. Android: vibrate.
+function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
+function buzz(n=1,gap=120){
+  if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_, i)=>i%2?gap:40));return}
+  for(let i=1;i<n;i++)setTimeout(pulse,i*gap);
+}
+// Leiser Tick bei Szenen, die Crebs von selbst spielt (iPhone lässt das evtl. nicht zu)
+function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
+
+// Werte
+const clamp=v=>Math.max(0,Math.min(100,v));
+const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Sauber'};
+const DEF={satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,geb:Date.now(),t:Date.now()};
+let st=DEF;try{st={...DEF,...JSON.parse(localStorage.getItem('crebs')||'{}')}}catch(e){}
+function save(){st.t=Date.now();try{localStorage.setItem('crebs',JSON.stringify(st))}catch(e){}}
+function say(t){$('msg').textContent=t}
+// Pro Minute: Werte sinken (im Schlaf steigt Energie). Abwesenheit wird nachgeholt, max. 24 h.
+function tick(min){
+  const z=st.schlaf;
+  st.satt=clamp(st.satt-min*(z?.3:.6));st.laune=clamp(st.laune-min*(z?.1:.5));
+  st.sauber=clamp(st.sauber-min*.3);st.energie=clamp(st.energie+min*(z?2:-.4));
+  if(Math.random()<min/20&&st.poo<3)st.poo++;
+  st.sauber=clamp(st.sauber-st.poo*min*.5);
+  if(z&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
+}
+tick(Math.min(1440,(Date.now()-st.t)/60000));
+function render(){
+  const tage=Math.floor((Date.now()-st.geb)/864e5);
+  document.querySelector('#b-sleep span').textContent=st.schlaf?'Weck':'Schlaf';
+  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('');
+}
+function mood(){
+  const low=Object.keys(NAMES).filter(k=>st[k]<25);
+  if(st.schlaf)return'Zzz …';
+  return low.length?{satt:'Ich hab Hunger!',laune:'Mir ist langweilig …',energie:'So müde …',sauber:'Igitt, putz mich!'}[low[0]]:null;
+}
+
+// Zeichnen: Szene aus Pixeln, 32 × 24 Felder
+const svg=$('scene');let out='';
+const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
+const sprite=(rows,x,y)=>rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(ch==='X')px(x+i,y+j,'crab');else if(ch==='K')px(x+i,y+j,'ink')}));
+const FISH=[".KK.K","KKKKK",".KK.K"],BALL=[".K.","KKK",".K."],HEART=[".K.K.","KKKKK",".KKK.","..K.."],POO=["..K..",".KKK.","KKKKK"];
+// Crebs im Stil des Claude-Maskottchens: kastiger Körper, Schlitzaugen, Ärmchen, vier Beinchen
+function crab(x,y,o){
+  const r=["..XXXXXXXXX..","..XKXXXXXKX..","..XKXXXXXKX..","..XXXXXXXXX..","..XXXXXXXXX..","..XXXXXXXXX..","..X.X...X.X..",o.leg?".X..X...X..X.":"..X.X...X.X.."].map(s=>[...s]);
+  if(o.zu){r[1][3]=r[1][9]='X'}
+  r[o.armL][0]=r[o.armL][1]='X';r[o.armR][11]=r[o.armR][12]='X';
+  const R=r.map(a=>a.join('')),a=o.turn||0,d=Math.sin(a)*2.6,sx=Math.cos(a);
+  const g=(dx,dy,col,front)=>{out+=`<g transform="translate(${x+6.5*(1-sx)+dx} ${y+dy}) scale(${sx} 1)">`;
+    R.forEach((row,j)=>[...row].forEach((c,i)=>{if(c==='X'||(c==='K'&&!front))px(i,j,col);else if(c==='K')px(i,j,'eye')}));out+='</g>'};
+  for(let k=Math.abs(d);k>.01;k-=.4)g(-Math.sign(d)*k,-k*.35,'crab2',false);
+  g(0,0,'crab',true);
+}
+let anim=null,cx=9,dir=1,f=0,spin=1;
+function start(type,len){anim={type,t:0,len}}
+function frame(){
+  out='';f++;
+  const A=anim,t=A?A.t:0,z=st.schlaf;
+  let y=13,o={leg:0,armL:3,armR:3,zu:z||f%40<2},after=()=>{};
+  out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+  const wx=((f*.04+16)%46)-9;out+=`<g fill="var(--cloud)"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`;
+  px(0,21,'line',32,.25);
+  for(let i=0;i<st.poo;i++)sprite(POO,28-i*4,18);
+  if(!A&&!z){
+    if(f%3===0){cx+=dir;if(cx<1||cx>17)dir*=-1}
+    o.leg=(f>>1)&1;
+    if(f%50===0&&Math.random()<.7){const k=['laptop','kick','turn'][Math.floor(Math.random()*3)];spin=-spin;start(k,k==='turn'?30:40);say({laptop:'Crebs tippt am Laptop …',kick:'Crebs kickt mit dem Ball!',turn:'Crebs schaut sich um …'}[k])}
+  }
+  switch(A?.type){
+    case'eat':{ // Fisch fällt von oben, Crebs fängt und mampft
+      o.armL=o.armR=2;
+      if(t<8)sprite(FISH,cx+4,t*1.3-3);
+      else{sprite(FISH.map(r=>r.slice(0,Math.max(0,5-(t-8)))),cx+4,8);if(t%2)y=12;o.zu=t%2===0}
+      break}
+    case'play':{ // Ball fliegt rein, Crebs schießt ihn weg
+      let bx,by;
+      if(t<10){const p=t/10;bx=31-(18-cx)*p;by=19-14*p*(1-p)*1.6}
+      else{const p=(t-10)/10;bx=cx+13+p*20;by=19-18*p}
+      if(t<20)after=()=>sprite(BALL,Math.round(bx),Math.round(by));
+      if(t>=9&&t<13){y=12;o.leg=1;o.armR=2}
+      if(t>=20){o.armL=o.armR=t%2?2:3;y=t%2?12:13}
+      break}
+    case'clean':{ // Seifenblasen steigen auf
+      o.armL=o.armR=t%2?2:3;
+      for(let k=0;k<5;k++)out+=`<circle cx="${cx+2+k*2.2}" cy="${20-((t*1.4+k*3)%14)}" r=".8" fill="none" stroke="var(--ink)" stroke-width=".25"/>`;
+      break}
+    case'turn':{o.turn=spin*Math.sin(t/A.len*Math.PI)*.75;break}
+    case'pet':{o.armL=o.armR=2;o.zu=true;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,cx+4,9-t*.6);break}
+    case'laptop':{ // tippen: Ärmchen abwechselnd auf der Tastatur
+      o.armL=f%2?3:4;o.armR=f%2?4:3;y=13;tock();
+      after=()=>{px(cx+2,17,'ink',9,3);px(cx+3,17.7,'sky',7,1.6);px(cx+6,18,'crab');px(cx+1,20,'ink',11,.7)};
+      if(t===A.len-1)say('Fertig getippt!');
+      break}
+    case'kick':{ // Ball auf dem Kopf jonglieren
+      const h=Math.abs(Math.sin(t*.45))*6;
+      after=()=>sprite(BALL,cx+5,10-h);
+      if(h<1.5){y=12;o.armL=o.armR=2;if(t%7===0)tock()}
+      if(t===A.len-1)say('Tor! ⚽');
+      break}
+  }
+  if(z){y=14;for(let k=0;k<2;k++)out+=`<text x="${cx+11+k*2}" y="${12-((f*.3+k*3)%6)}" font-size="${3-k}" fill="var(--ink)" font-family="var(--font)">z</text>`}
+  crab(cx,y,o);after();
+  if(A&&++A.t>=A.len)anim=null;
+  svg.innerHTML=out;
+}
+setInterval(frame,150);
+
+// Handlungen
+function act(ch,txt,n,type,len){
+  if(st.schlaf){say('Pssst, Crebs schläft.');return}
+  for(const k in ch)st[k]=clamp(st[k]+ch[k]);
+  buzz(n);start(type,len);say(txt);render();save();
+}
+$('pet').onclick=()=>act({laune:5},'Klick-klack! ♥',1,'pet',10);
+$('b-feed').onclick=()=>act({satt:25,sauber:-5},'Mampf! Ein Fisch.',2,'eat',16);
+$('b-play').onclick=()=>act({laune:20,energie:-10,satt:-5},'Fang! … und weg damit!',3,'play',26);
+$('b-sleep').onclick=()=>{st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-clean').onclick=()=>{if(!st.schlaf)st.poo=0;act({sauber:40},'Blubb, blitzblank!',2,'clean',16)};
+// Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
+for(const id of ['pet','b-feed','b-play','b-sleep','b-clean']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn()}}
+setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();save()},30000);
+render();save();frame();{const m=mood();if(m)say(m)}
+</script>
+</body></html>
