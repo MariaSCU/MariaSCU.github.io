@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lama">
+<meta name="theme-color" content="#b98a5e">
+<title>Lama</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
+<style>
+*{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+/* Layout wie Crebs: Himmel-Fenster mit Lama, darunter Werte und runde Tasten */
+:root{--bg:#f6f4ef;--fg:#2a2622;--sky:#e6eef4;--sun:#f2c14e;--cloud:#ffffff;--mtn:#cfd8e0;--ink:#3a332c;--line:#c9c1b4;--eye:#1d1d1f;--lama:#d9b48a;--lama2:#9c7652;--deck:#d9466f;--hay:#e0b84a;--grass:#6fa45a;--btn:#b98a5e;--font:"Silkscreen",ui-monospace,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16151a;--fg:#e8e4de;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--mtn:#2a3343;--ink:#ddd6cc;--line:#3a3f4c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#16151a;--fg:#e8e4de;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--mtn:#2a3343;--ink:#ddd6cc;--line:#3a3f4c;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);display:grid;place-items:center;padding-inline:16px}
+.egg{width:min(340px,100%);display:grid;gap:14px;justify-items:center;padding-block:24px}
+h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--btn)}
+.lcd{width:100%;background:var(--sky);border-radius:18px;overflow:hidden}
+.tap{position:relative;display:block;cursor:pointer}
+#scene{width:100%;display:block;shape-rendering:crispEdges}
+.sw{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.stats{width:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:10px;align-items:center}
+.bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;background:var(--btn);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
+.btns label:active{transform:scale(.92)}.btns label:has(input:focus-visible){outline:3px solid var(--ink)}
+#msg{font-size:11px;min-height:1.4em;text-align:center}
+</style>
+</head>
+<body>
+<div class="egg">
+  <h1>LAMA</h1>
+  <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" aria-label="Lama streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
+  <div id="msg">Hallo! Ich bin dein Lama.</div>
+  <div class="stats" id="stats"></div>
+  <div class="btns">
+    <label id="b-feed"><input type="checkbox" switch class="sw"><span>Heu</span></label><label id="b-play"><input type="checkbox" switch class="sw"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw"><span>Bürste</span></label>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// Haptik wie bei Crebs: Fingertipp auf ein Schalter-Feld = Tick am iPhone, Android: vibrate.
+function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
+function buzz(n=1,gap=120){
+  if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_, i)=>i%2?gap:40));return}
+  for(let i=1;i<n;i++)setTimeout(pulse,i*gap);
+}
+function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
+
+// Werte
+const clamp=v=>Math.max(0,Math.min(100,v));
+const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Flausch'};
+const DEF={satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,geb:Date.now(),t:Date.now()};
+let st=DEF;try{st={...DEF,...JSON.parse(localStorage.getItem('lama')||'{}')}}catch(e){}
+function save(){st.t=Date.now();try{localStorage.setItem('lama',JSON.stringify(st))}catch(e){}}
+function say(t){$('msg').textContent=t}
+// Pro Minute: Werte sinken (im Schlaf steigt Energie). Abwesenheit wird nachgeholt, max. 24 h.
+function tick(min){
+  const z=st.schlaf;
+  st.satt=clamp(st.satt-min*(z?.3:.6));st.laune=clamp(st.laune-min*(z?.1:.5));
+  st.sauber=clamp(st.sauber-min*.3);st.energie=clamp(st.energie+min*(z?2:-.4));
+  if(Math.random()<min/20&&st.poo<3)st.poo++;
+  st.sauber=clamp(st.sauber-st.poo*min*.5);
+  if(z&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
+}
+tick(Math.min(1440,(Date.now()-st.t)/60000));
+function render(){
+  const tage=Math.floor((Date.now()-st.geb)/864e5);
+  document.querySelector('#b-sleep span').textContent=st.schlaf?'Weck':'Schlaf';
+  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('');
+}
+function mood(){
+  const low=Object.keys(NAMES).filter(k=>st[k]<25);
+  if(st.schlaf)return'Zzz …';
+  return low.length?{satt:'Ich hab Hunger auf Heu!',laune:'Mir ist langweilig …',energie:'So müde …',sauber:'Mein Fell ist verfilzt!'}[low[0]]:null;
+}
+
+// Zeichnen: Szene aus Pixeln, 32 × 24 Felder
+const svg=$('scene');let out='';
+const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
+const COL={K:'ink',H:'hay',G:'grass'};
+const sprite=(rows,x,y)=>rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(COL[ch])px(x+i,y+j,COL[ch])}));
+const HAY=[".H.H.","HHHHH","HHHHH"],BALL=[".K.","KKK",".K."],HEART=[".K.K.","KKKKK",".KKK.","..K.."],POO=[".K.","KKK"],TUFT=["G.G",".G."];
+// Lama von der Seite: langer Hals, Ohren, bunte Decke (R), Schwänzchen. X = Fell, K = Auge.
+const STAND=["..........X.X.",".........XXXX.",".........XKXXX",".........XXXXX",".........XXX..","X........XX...",".XXRRRRRXXX...","XXXRRRRRXXX...",".XXXXXXXXXX...",".X.X....X.X...",".X.X....X.X..."];
+const GRAZE=["..............","..............","..............","..............","..............","X.............",".XXRRRRRXX....","XXXRRRRRXXX..X",".XXXXXXXXXXXXX",".X.X....X.XKXX",".X.X....X.X.XX"];
+// face: 1 = schaut nach rechts, -1 = nach links
+function lama(x,y,o){
+  let r=(o.graze?GRAZE:STAND).map(s=>[...s]);
+  if(o.leg){r[9]=[..."..X.X....X.X.."];r[10]=[...".X...X..X...X."]}
+  if(o.mund){if(o.graze)r[10][13]='.';else r[3][13]='.'}
+  if(o.lie)r=r.slice(0,9);
+  const R=r.map(a=>a.join('')),a=o.turn||0,d=Math.sin(a)*2.6,sx=Math.cos(a)*o.face;
+  const g=(dx,dy,shadow)=>{out+=`<g transform="translate(${x+7*(1-sx)+dx} ${y+dy}) scale(${sx} 1)">`;
+    R.forEach((row,j)=>[...row].forEach((c,i)=>{
+      if(c==='.')return;
+      if(shadow)px(i,j,'lama2');
+      else px(i,j,c==='R'?'deck':c==='K'?(o.zu?'lama':'eye'):'lama');
+    }));out+='</g>'};
+  for(let k=Math.abs(d);k>.01;k-=.4)g(-Math.sign(d)*k,-k*.35,true);
+  g(0,0,false);
+}
+let anim=null,cx=6,dir=1,f=0,spin=1;
+function start(type,len){anim={type,t:0,len}}
+// Maul-Position (vorne am Kopf), abhängig von Blickrichtung
+const mouthX=()=>dir>0?cx+14:cx-1;
+function frame(){
+  out='';f++;
+  const A=anim,t=A?A.t:0,z=st.schlaf;
+  let y=10,o={face:dir,leg:0,zu:z||f%40<2},after=()=>{};
+  out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+  out+=`<polygon points="-2,21 6,11 13,21" fill="var(--mtn)"/><polygon points="9,21 18,9 27,21" fill="var(--mtn)"/>`;
+  const wx=((f*.04+16)%46)-9;out+=`<g fill="var(--cloud)"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`;
+  px(0,21,'line',32,.25);
+  for(const gx of [1,15,28])sprite(TUFT,gx,19);
+  for(let i=0;i<st.poo;i++)sprite(POO,29-i*3,19);
+  if(!A&&!z){
+    if(f%3===0){cx+=dir;if(cx<1||cx>17){dir*=-1;cx+=dir}}
+    o.face=dir;o.leg=(f>>1)&1;
+    if(f%50===0&&Math.random()<.7){const k=['graze','spit','turn','hop'][Math.floor(Math.random()*4)];spin=-spin;start(k,{graze:40,spit:24,turn:30,hop:24}[k]);say({graze:'Lama zupft Gras …',spit:'Pfft! Lama spuckt.',turn:'Lama schaut sich um …',hop:'Hüpf, hüpf!'}[k])}
+  }
+  const mx=mouthX();
+  switch(A?.type){
+    case'eat':{ // Heu fällt vors Maul, Lama frisst es
+      const hx=dir>0?cx+13:cx-4;
+      if(t<8)sprite(HAY,hx,t*1.6-3);
+      else{o.graze=1;o.mund=t%2;sprite(HAY.map(r=>r.slice(0,Math.max(0,5-Math.floor((t-8)/2)))),hx,18)}
+      break}
+    case'play':{ // Ball fliegt rein, Lama springt und köpft ihn weg
+      const side=dir>0?31:-2;let bx,by;
+      if(t<10){const p=t/10;bx=side+(mx-side)*p;by=19-12*p}
+      else{const p=(t-10)/10;bx=mx+(side-mx)*p;by=7-6*p+14*p*p}
+      if(t<20)after=()=>sprite(BALL,Math.round(bx)-1,Math.round(by));
+      if(t>=7&&t<13){y=10-Math.round(Math.sin((t-7)/6*Math.PI)*3);o.leg=1}
+      if(t>=20){y=t%2?9:10}
+      break}
+    case'clean':{ // Bürsten: Fell-Flusen und Seifenblasen
+      o.zu=true;
+      for(let k=0;k<5;k++)out+=`<circle cx="${cx+2+k*2.2}" cy="${19-((t*1.4+k*3)%14)}" r=".8" fill="none" stroke="var(--ink)" stroke-width=".25"/>`;
+      break}
+    case'turn':{o.turn=spin*Math.sin(t/A.len*Math.PI)*.75;break}
+    case'pet':{o.zu=true;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,dir>0?cx+9:cx,4-t*.4);break}
+    case'graze':{o.graze=1;o.mund=(t>>1)&1;break}
+    case'spit':{ // Maul auf, Spucke fliegt im Bogen nach vorn
+      o.mund=1;if(t===4)tock();
+      if(t>=4)for(let k=0;k<3;k++){const p=t-4-k*2;if(p>=0)px(mx+dir*p*1.2,y+3+p*p*.04,'cloud',.7,.7)}
+      break}
+    case'hop':{const h=Math.abs(Math.sin(t*.5))*3;y=10-Math.round(h);o.leg=h>1?1:0;if(h<.4&&t>2)tock();break}
+  }
+  if(z){o.lie=1;o.zu=true;y=12;for(let k=0;k<2;k++)out+=`<text x="${dir>0?cx+14+k*2:cx-4-k*2}" y="${10-((f*.3+k*3)%6)}" font-size="${3-k}" fill="var(--ink)" font-family="var(--font)">z</text>`}
+  lama(cx,y,o);after();
+  if(A&&++A.t>=A.len)anim=null;
+  svg.innerHTML=out;
+}
+setInterval(frame,150);
+
+// Handlungen
+function act(ch,txt,n,type,len){
+  if(st.schlaf){say('Pssst, das Lama schläft.');return}
+  for(const k in ch)st[k]=clamp(st[k]+ch[k]);
+  buzz(n);start(type,len);say(txt);render();save();
+}
+// Schlechte Laune? Dann spuckt das Lama beim Streicheln.
+$('pet').onclick=()=>st.laune<25&&!st.schlaf?act({laune:3},'Pfft! Lama ist beleidigt.',3,'spit',24):act({laune:5},'Mmmh, kuschelig! ♥',1,'pet',10);
+$('b-feed').onclick=()=>act({satt:25,sauber:-5},'Mampf! Frisches Heu.',2,'eat',20);
+$('b-play').onclick=()=>act({laune:20,energie:-10,satt:-5},'Hopp … Kopfball!',3,'play',26);
+$('b-sleep').onclick=()=>{st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-clean').onclick=()=>{if(!st.schlaf)st.poo=0;act({sauber:40},'Bürst, bürst – schön flauschig!',2,'clean',16)};
+// Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
+for(const id of ['pet','b-feed','b-play','b-sleep','b-clean']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn()}}
+setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();save()},30000);
+render();save();frame();{const m=mood();if(m)say(m)}
+</script>
+</body></html>
