@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Polar">
+<meta name="theme-color" content="#3a8cc4">
+<style>*{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}</style>
+<title>Polar-Gotchi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
+<style>
+/* Layout wie Crebs II: Fenster mit Eisbär, darunter Werte und runde Tasten */
+:root{--bg:#f2f6fa;--fg:#22262c;--sky:#d7ebf7;--sun:#f2c14e;--cloud:#ffffff;--ink:#2f333a;--line:#b9cad8;--eye:#1d1d1f;--acc:#3a8cc4;--bear:#ffffff;--bear2:#dce6ee;--edge:#8ea5b9;--ice:#eef6fb;--water:#4f8fc0;--seal:#7d8a97;--night:#121a2b;--moon:#efe9cf;--snow:#ffffff;--grau:#c3d1dd;--blass:#efe6c4;--rot:#d9534f;--rosa:#f2b8c6;--schnauze:#efe8d8;--haut:#f1c9a5;--nord1:#5be3a1;--nord2:#9a86f0;--font:"Silkscreen",ui-monospace,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151b;--fg:#e4e6ea;--sky:#1a2433;--sun:#e9e4c9;--cloud:#2f3a4c;--ink:#d5d9e0;--line:#2f3a4c;--grau:#273142;--ice:#c7d5e1;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151b;--fg:#e4e6ea;--sky:#1a2433;--sun:#e9e4c9;--cloud:#2f3a4c;--ink:#d5d9e0;--line:#2f3a4c;--grau:#273142;--ice:#c7d5e1;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);display:grid;place-items:center;padding-inline:16px}
+.egg{width:min(340px,100%);display:grid;gap:14px;justify-items:center;padding-block:24px}
+h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
+.lcd{width:100%;background:var(--sky);border-radius:18px;overflow:hidden}
+.tap{position:relative;display:block;cursor:pointer}
+#scene{width:100%;display:block;shape-rendering:crispEdges}
+.sw{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.stats{width:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:10px;align-items:center}
+.bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;background:var(--acc);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
+.mehr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+.mehr label{position:relative;font-size:10px;padding:9px 14px;border-radius:999px;border:2px solid var(--acc);cursor:pointer;user-select:none;-webkit-user-select:none}
+.btns label:active,.mehr label:active{transform:scale(.93)}
+.btns label:has(input:focus-visible),.mehr label:has(input:focus-visible){outline:3px solid var(--ink)}
+.mehr[hidden]{display:none}
+#msg{font-size:11px;min-height:1.4em;text-align:center}
+.form{display:flex;gap:8px;width:100%}.form[hidden]{display:none}
+.form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
+.form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--acc);color:#fff}
+</style>
+</head>
+<body>
+<div class="egg">
+  <h1 id="name">POLAR</h1>
+  <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" aria-label="Eisbär streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
+  <div id="msg">Hallo!</div>
+  <form id="nameform" class="form" hidden><input id="nm" maxlength="12" placeholder="Wie soll ich heißen?" autocomplete="off" aria-label="Name"><button>Fertig</button></form>
+  <div class="stats" id="stats"></div>
+  <div class="btns">
+    <label id="b-feed"><input type="checkbox" switch class="sw"><span>Futter</span></label><label id="b-play"><input type="checkbox" switch class="sw"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw"><span>Baden</span></label>
+  </div>
+  <div class="mehr" id="spielwahl" hidden><label id="p-ball"><input type="checkbox" switch class="sw"><span>Schneeball</span></label><label id="p-kraul"><input type="checkbox" switch class="sw"><span>Kraulen</span></label></div>
+  <div class="mehr">
+    <label id="b-med"><input type="checkbox" switch class="sw"><span>Medizin</span></label>
+    <label id="g-robbe"><input type="checkbox" switch class="sw"><span>Robbenjagd</span></label><label id="g-fisch"><input type="checkbox" switch class="sw"><span>Fische fangen</span></label><label id="g-schwimm"><input type="checkbox" switch class="sw"><span>Wettschwimmen</span></label><label id="b-hut"><input type="checkbox" switch class="sw"><span>Mützen</span></label>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// Haptik wie bei Crebs: iPhone über Schalter-Feld, Android über vibrate
+function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
+function buzz(n=1,gap=120){
+  if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_, i)=>i%2?gap:40));return}
+  for(let i=1;i<n;i++)setTimeout(pulse,i*gap);
+}
+function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
+
+// Werte
+const clamp=v=>Math.max(0,Math.min(100,v));
+const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Sauber'};
+const DEF={satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,ei:true,taps:0,name:'',stufe:'baby',nacht:false,krank:false,krankMin:0,punkte:0,hut:'',geb:Date.now(),t:Date.now()};
+let st=DEF;try{st={...DEF,...JSON.parse(localStorage.getItem('polar')||'{}')}}catch(e){}
+function save(){st.t=Date.now();try{localStorage.setItem('polar',JSON.stringify(st))}catch(e){}}
+function say(t){$('msg').textContent=t}
+const nm=()=>st.name||'Polar';
+// Pro Minute: Werte sinken (im Schlaf steigt Energie). Abwesenheit wird nachgeholt, max. 24 h.
+function tick(min){
+  if(st.ei)return;
+  const z=st.schlaf;
+  st.satt=clamp(st.satt-min*(z?.3:.6));st.laune=clamp(st.laune-min*(z?.1:.5));
+  st.sauber=clamp(st.sauber-min*.3);st.energie=clamp(st.energie+min*(z?2:-.4));
+  if(Math.random()<min/25&&st.poo<3)st.poo++;
+  st.sauber=clamp(st.sauber-st.poo*min*.5);
+  // Krank erst nach einer Stunde Vernachlässigung; der Eisbär stirbt nie
+  const schlecht=['satt','laune','sauber'].filter(k=>st[k]<20).length>=2;
+  if(!st.krank){st.krankMin=schlecht?st.krankMin+min:Math.max(0,st.krankMin-min);if(st.krankMin>=60){st.krank=true;say('Mir ist schlecht …')}}
+  else st.laune=clamp(st.laune-min*.5);
+  const n=isNight(new Date());
+  if(n&&!st.nacht){st.schlaf=true;say('Gute Nacht!')}
+  if(!n&&st.nacht){st.schlaf=false;say('Guten Morgen!')}
+  st.nacht=n;
+  if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
+}
+tick(Math.min(1440,(Date.now()-st.t)/60000));
+function isNight(d){const h=d.getHours();return h>=21||h<7}
+// Arktis-Wetter: pro Stunde fest ausgewürfelt – im Winter oft Schnee
+function weather(d){
+  const m=d.getMonth(),r=((d.getFullYear()*400+m*31+d.getDate())*24+d.getHours())*2654435761%1000/1000;
+  return r<(m>9||m<3?.6:.3)?'schnee':'klar';
+}
+function stage(){const d=(Date.now()-st.geb)/864e5;return d<1?'baby':d<4?'kind':'gross'}
+const STUFE={baby:'Baby',kind:'Jungbär',gross:'Groß'},SCALE={baby:.6,kind:.8,gross:1};
+function render(){
+  const sg=st.ei?st.stufe:stage();if(sg!==st.stufe){st.stufe=sg;say(sg==='kind'?'Ich bin gewachsen!':'Ich bin jetzt ein großer Eisbär!')}
+  const tage=Math.floor((Date.now()-st.geb)/864e5);
+  document.querySelector('#b-sleep span').textContent=st.schlaf?'Weck':'Schlaf';
+  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'} · ${STUFE[st.stufe]}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('');
+}
+function mood(){
+  if(st.krank&&!st.schlaf)return'Mir ist schlecht … Medizin?';
+  if(st.schlaf)return'Zzz …';
+  const low=Object.keys(NAMES).filter(k=>st[k]<25);
+  return low.length?{satt:'Ich hab Hunger auf Fisch!',laune:'Mir ist langweilig …',energie:'So müde …',sauber:'Mein Fell ist ganz grau!'}[low[0]]:null;
+}
+
+// Zeichnen: Szene aus Pixeln, 32 × 24 Felder
+const svg=$('scene');let out='';
+const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
+const COL={U:'haut',K:'ink',D:'eye',W:'bear',E:'edge',S:'seal',B:'water',G:'sun',P:'blass',R:'rot',I:'ice'};
+const sprite=(rows,x,y)=>rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(COL[ch])px(x+i,y+j,COL[ch])}));
+const FISH=[".KK.K","KKKKK",".KK.K"],HEART=[".R.R.","RRRRR",".RRR.","..R.."],GRAETE=["E.E.E.","EEEEEE","E.E.E."],BALL=[".E.","EWE",".E."];
+const SEAL=[".SSS.","SDSDS","SSKSS"],WALROSS=["SSSSSSS...","SSSSSSSS..","SSSSSSSSDS","SSSSSSSKSS","......W.W."];
+// Eisbär von vorn: runde Ohren, Knopfaugen, helle Schnauze mit schwarzer Nase, Tatzen
+function bear(x,y,o){
+  const r=["..WW.....WW..",".WRWWWWWWWRW.","..WWWWWWWWW..","..WDWWWWWDW..","..WWWCCCWWW..","...WWCDCWW...",".WWWWWWWWWWW.","WWWWWWWWWWWWW","WWWWWWWWWWWWW",".WWWWWWWWWWW.",o.leg?"..WW.....WW..":".WW.......WW."].map(s=>[...s]);
+  if(o.upL){r[7][0]=r[8][0]='.';r[5][0]=r[6][0]='W'}
+  if(o.upR){r[7][12]=r[8][12]='.';r[5][12]=r[6][12]='W'}
+  if(o.zu){r[3][3]=r[3][9]='L'}else if(o.wink)r[3][9]='L';
+  if(o.mampf)r[6][6]='D';
+  const sc=SCALE[st.stufe]||1,sx=Math.cos(o.turn||0),sy=o.sy||1,s=sc*sy,d=Math.sin(o.turn||0)*2.6;
+  const C={W:st.krank?'blass':'bear',C:'schnauze',R:'rosa',D:'eye',L:st.krank?'blass':'bear'};
+  const voll=(i,j)=>r[j]&&r[j][i]&&r[j][i]!=='.';
+  const g=(dx,dy,front)=>{
+    out+=`<g transform="translate(${x+6.5+dx} ${y+10-5.5*s+dy}) rotate(${o.rot||0}) scale(${sx*sc} ${s}) translate(-6.5 -5.5)">`;
+    if(front)for(let j=-1;j<=r.length;j++)for(let i=-1;i<=13;i++)if(!voll(i,j)&&(voll(i-1,j)||voll(i+1,j)||voll(i,j-1)||voll(i,j+1)))px(i,j,'edge');
+    r.forEach((row,j)=>row.forEach((c,i)=>{if(c==='.')return;px(i,j,front?C[c]:'bear2');if(front&&c==='L')px(i,j+.4,'eye',1,.3)}));
+    if(front&&st.hut){const h=HATS[st.hut];sprite(h.rows,h.x,h.y)}
+    out+='</g>'};
+  for(let k=Math.abs(d);k>.01;k-=.4)g(-Math.sign(d)*k,-k*.35,false);
+  g(0,0,true);
+  // Zwinkern: kleines Funkeln neben dem zugekniffenen Auge
+  if(o.wink&&!o.zu){const P=(lx,ly)=>[x+6.5+(lx-6.5)*sc*sx,y+10-5.5*s+(ly-5.5)*s];px(...P(10.6,2.2),'sun',.5,.5);px(...P(11.6,1.3),'sun',.35,.35)}
+}
+let anim=null,cx=9,dir=1,f=0,spin=1,game=null,wink=0;
+// Mützen: mit Spielpunkten freispielen
+const HATS={muetze:{p:10,n:'Bommelmütze',x:3,y:-2,rows:["...R...",".RRRRR.","RWRWRWR"]},krone:{p:25,n:'Krone',x:4,y:-1,rows:["G.G.G","GGGGG"]},
+  fischer:{p:40,n:'Fischerhut',x:2,y:-1,rows:["..GGGGG..","GGGGGGGGG"]},blume:{p:60,n:'Schneeblume',x:9,y:-1,rows:[".P.","PGP",".P."]}};
+const frei=pt=>Object.keys(HATS).filter(k=>pt>=HATS[k].p);
+function nextHat(){
+  const fr=frei(st.punkte);
+  if(!fr.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zur ${HATS[k].n}!`);return}
+  const liste=['',...fr];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
+  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Mütze.');save();
+}
+function canPlay(){
+  if(st.ei){say('Erst muss der Eisbär aus der Höhle. Tipp drauf!');return false}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return false}
+  if(st.krank){say('Mir geht es nicht gut zum Spielen …');return false}
+  return true}
+// Minispiele: jedes Antippen der Szene ist ein Spielzug
+const HOLES=[5,16,27];
+function startGame(type){
+  if(game||!canPlay())return;anim=null;
+  game={type,t:0,score:0,n:0,x:9,tx:9,me:1,rx:1};newRound();
+  say({robbe:'Tipp auf das Eisloch, aus dem die Robbe guckt!',fisch:'Tipp dorthin, wo der Fisch hinfällt!',schwimm:'Tipp ganz schnell, um zu schwimmen!'}[game.type]);
+}
+function newRound(){Object.assign(game,{fx:3+Math.random()*24,fy:-3,hole:Math.floor(Math.random()*3),wait:3+Math.floor(Math.random()*6),up:0,hit:false})}
+function endGame(){
+  const g=game;game=null;const pts=g.type==='schwimm'?(g.win?10:3):g.score;
+  const vorher=frei(st.punkte).length;st.punkte+=pts;const neu=frei(st.punkte);st.laune=clamp(st.laune+10+pts*2);st.energie=clamp(st.energie-10);st.satt=clamp(st.satt+(g.type==='schwimm'?0:pts*2));
+  buzz(3);say(`Spiel vorbei: ${pts} Punkte!`+(g.type==='schwimm'?(g.win?' Gewonnen!':' Das Walross war schneller!'):'')+(neu.length>vorher?` Neu: ${HATS[neu[neu.length-1]].n}!`:''));render();save();
+}
+function tapX(ev){const r=svg.getBoundingClientRect?.()||{left:0,width:320};return((ev?.clientX??r.left+r.width/2)-r.left)/r.width*32}
+function gameTap(ev){
+  const g=game,x=tapX(ev);
+  if(g.type==='robbe'&&!g.hit){
+    const h=HOLES.reduce((b,hx,i)=>Math.abs(hx-x)<Math.abs(HOLES[b]-x)?i:b,0);g.tx=HOLES[h]-6.5;
+    if(g.up>0&&h===g.hole){g.hit=true;g.score++;tock();say('Erwischt! '+g.score+' – die Robbe taucht weg.')}
+  }
+  if(g.type==='fisch')g.tx=Math.max(0,Math.min(19,x-6.5));
+  if(g.type==='schwimm'&&!g.done)g.me+=1;
+}
+function drawGame(){
+  const g=game,o={leg:(f>>1)&1};g.t++;
+  if(g.type==='robbe'){
+    g.x+=Math.sign(g.tx-g.x)*Math.min(1.6,Math.abs(g.tx-g.x));bear(g.x,11,{...o,upL:g.hit,upR:g.hit});
+    HOLES.forEach(hx=>out+=`<ellipse cx="${hx}" cy="21.8" rx="2.4" ry=".7" fill="var(--water)"/>`);
+    if(g.wait>0){g.wait--;if(!g.wait)g.up=Math.max(5,10-g.score)}
+    else if(g.up>0){g.up--;const s=g.hit?Math.max(0,3-(10-g.up)):Math.min(3,10-g.up);sprite(SEAL.slice(0,Math.ceil(s)),HOLES[g.hole]-2.5,21.4-s);
+      if(!g.up){if(!g.hit)say('Weg ist sie!');g.n++;if(g.n>=8)return endGame();newRound()}}
+  }
+  if(g.type==='fisch'){
+    g.x+=Math.sign(g.tx-g.x)*Math.min(1.5,Math.abs(g.tx-g.x));
+    bear(g.x,11,{...o,upL:1,upR:1});g.fy+=.6;sprite(FISH,Math.round(g.fx),Math.round(g.fy));
+    if(g.fy>=9){if(Math.abs(g.fx+2.5-(g.x+6.5))<4.5){g.score++;say('Gefangen! '+g.score)}else say('Platsch, daneben!');g.n++;newRound()}
+    if(g.n>=8)return endGame();
+  }
+  if(g.type==='schwimm'){
+    px(0,9,'water',32,15);px(29,9,'rot',.4,15);
+    for(let k=0;k<8;k++)px((k*4.3+f*.5)%32,10+(k*5)%13,'sky',1.2,.2);
+    if(!g.done)g.rx+=.45;sprite(WALROSS,Math.round(g.rx),10);
+    bear(g.me,13,{leg:0,upL:f%4<2,upR:f%4>=2});px(0,20,'water',32,4);
+    if(!g.done&&(g.me>=17||g.rx>=19)){g.done=true;g.win=g.me>=17;g.end=g.t}
+    if(g.done&&g.t-g.end>6)return endGame();
+  }
+  if(game&&g.type!=='schwimm')out+=`<text x="1" y="3" font-size="2.4" fill="var(--ink)" font-family="var(--font)">${g.score}</text>`;
+}
+// Start: Schneehöhle. Mit jedem Tippen guckt das Eisbärbaby ein Stück weiter heraus.
+function drawDen(){
+  const w=anim?.type==='wobble'?(anim.t%2?.4:-.4):0;
+  out+=`<ellipse cx="${16+w}" cy="21" rx="9" ry="7" fill="var(--snow)" stroke="var(--edge)" stroke-width=".3"/><ellipse cx="${16+w}" cy="20.5" rx="3.2" ry="2.8" fill="var(--night)"/>`;
+  if(st.taps>=2){px(14.6+w,19.4,'moon',.7,.7);px(16.7+w,19.4,'moon',.7,.7)}
+  if(st.taps>=4)px(15.7+w,20.5,'bear',.7,.5);
+}
+function start(type,len){anim={type,t:0,len}}
+function frame(){
+  out='';f++;
+  const A=anim,t=A?A.t:0,z=st.schlaf;
+  let y=11,o={leg:0,zu:z||f%53<2},after=()=>{};
+  const jetzt=new Date(),nacht=isNight(jetzt),wt=weather(jetzt);
+  if(nacht){out+=`<rect width="32" height="24" fill="var(--night)"/>`;
+    // Nordlicht: zwei wogende Bänder
+    for(const [c,y0,ph] of [['nord1',6,0],['nord2',8.5,2]]){let d=`M0 ${y0}`;for(let x=0;x<=32;x+=2)d+=` L${x} ${y0+Math.sin(x*.35+f*.06+ph)*1.4}`;out+=`<path d="${d}" stroke="var(--${c})" stroke-width="1.6" fill="none" opacity="${.35+.25*Math.sin(f*.05+ph)}"/>`}
+    [[3,3],[9,2],[14,4],[20,2],[25,3],[29,6]].forEach(([x,y],k)=>{if((f>>3)%7!==k)px(x,y,'moon',.3,.3)})}
+  else{if(wt==='schnee')out+=`<rect width="32" height="24" fill="var(--grau)"/>`;else out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+    const wx=((f*.04+16)%46)-9;out+=`<g fill="var(--cloud)"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`}
+  // Eisberge am Horizont, Eisscholle als Boden
+  out+=`<path d="M0 21 L3 15 L6 18 L9 13 L13 21Z" fill="var(--ice)" opacity=".7"/><path d="M20 21 L24 16 L27 18 L32 14 L32 21Z" fill="var(--ice)" opacity=".7"/>`;
+  px(0,21,'ice',32,3);px(0,21,'edge',32,.25);
+  if(!game)out+=`<ellipse cx="27" cy="22.4" rx="3" ry=".8" fill="var(--water)"/>`;
+  if(st.ei){drawDen();if(anim&&++anim.t>=anim.len)anim=null;svg.innerHTML=out;return}
+  if(!game)for(let i=0;i<st.poo;i++)sprite(GRAETE,1+i*7,21.6);
+  if(game){drawGame();svg.innerHTML=out;return}
+  if(!A&&!z){
+    if(f%3===0){cx+=dir;if(cx<1||cx>17)dir*=-1}
+    o.leg=(f>>1)&1;
+    if(f%50===0&&Math.random()<.7){const k=['laptop','schnuppern','rollen','rutschen','turn'][Math.floor(Math.random()*5)];spin=-spin;start(k,k==='turn'?30:36);
+      say({laptop:`${nm()} arbeitet am Laptop …`,schnuppern:`${nm()} schnuppert … riecht nach Robbe!`,rollen:`${nm()} wälzt sich im Schnee!`,rutschen:`${nm()} rutscht auf dem Bauch übers Eis!`,turn:`${nm()} schaut sich um …`}[k])}
+    // Zwischendurch zwinkern
+    if(!wink&&Math.random()<.012){wink=7;if(Math.random()<.3)say(`${nm()} zwinkert dir zu 😉`)}
+  }
+  if(wink>0){wink--;if(!z)o.wink=true}
+  switch(A?.type){
+    case'eat':{ // Fisch fällt von oben, Tatzen hoch, mampfen
+      o.upL=o.upR=1;
+      if(t<8)sprite(FISH,cx+4,t*1.2-3);
+      else{sprite(FISH.map(r=>r.slice(0,Math.max(0,5-(t-8)))),cx+4,7);o.mampf=t%2===0;if(t%2)y=10}
+      break}
+    case'play':{ // Schneeball fliegt rein, Tatze haut ihn weg
+      let bx,by;
+      if(t<10){const p=t/10;bx=31-(18-cx)*p;by=17-12*p*(1-p)*1.6}
+      else{const p=(t-10)/10;bx=cx+13+p*20;by=17-16*p}
+      if(t<20)after=()=>sprite(BALL,Math.round(bx),Math.round(by));
+      if(t>=9&&t<13){y=10;o.upR=1}
+      if(t>=20){o.upL=o.upR=t%2;y=t%2?10:11}
+      break}
+    case'clean':{ // Baden im Eismeer, danach Wasser abschütteln
+      if(t<10){y=14;after=()=>{px(cx-1,20,'water',15,1.4);for(let k=0;k<4;k++)px(cx+1+k*3.5,19.5-(t*.7+k)%3,'water',.5,.5)}}
+      else{o.turn=Math.sin(t*1.2)*.5;for(let k=0;k<6;k++)px(cx+6.5+Math.cos(k+t)*(t-8)*.9,15+Math.sin(k*2+t)*(t-8)*.5,'water',.45,.45)}
+      break}
+    case'turn':{o.turn=spin*Math.sin(t/A.len*Math.PI)*.75;break}
+    case'laptop':{ // tippen: Tatzen abwechselnd auf der Tastatur, Bildschirm von hinten
+      o.upL=f%2;o.upR=!o.upL;if(f%2)tock();
+      after=()=>{px(cx+3.5,16.6,'ink',6,3.4);px(cx+6,17.8,'sky',1,.8);px(cx+1.5,20,'ink',10,.7)};
+      if(t===A.len-1)say('Fertig gearbeitet!');
+      break}
+    case'schnuppern':{ // Nase in die Luft, Duftwölkchen
+      y=10+(t%6<3?0:.4);o.zu=t%12<6;
+      for(let k=0;k<3;k++)px(cx+6.2+Math.sin(t*.5+k)*1.2,7-((t*.4+k*2)%5),'edge',.4,.4);
+      break}
+    case'rollen':{ // im Schnee wälzen
+      o.rot=spin*t*10;y=12;cx=Math.max(1,Math.min(17,cx+spin*.25));o.leg=1;
+      if(t%6===0)tock();for(let k=0;k<3;k++)px(cx+3+k*3,20.4-((t+k*2)%4)*.4,'snow',.5,.5);
+      break}
+    case'rutschen':{ // Bauchrutscher über die Scholle
+      o.sy=.65;o.upL=o.upR=1;cx+=dir*.5;if(cx<1||cx>17)dir*=-1;
+      for(let k=0;k<3;k++)px(cx+(dir>0?-1:13)-dir*k,20.2-k*.3,'snow',.5,.5);
+      if(t===A.len-1)say('Wiiie!');
+      break}
+    case'med':{
+      if(t<8)sprite(["RWW"],cx+5,3+t*.8);else{o.upL=o.upR=1;for(let k=0;k<4;k++)px(cx+2+k*3,10-(t-8)*.5-(k%2),'sun',.5,.5)}
+      break}
+    case'kraul':{ // eine Hand krault den Kopf, der Bär genießt und klopft mit dem Fuß
+      const sc=SCALE[st.stufe]||1;o.zu=true;o.leg=t%2;o.turn=Math.sin(t*.3)*.25;if(t%4===0)tock();
+      after=()=>{sprite(["HHH.","HHHH","HHH."].map(r=>r.replace(/H/g,'U')),cx+6.5+(Math.sin(t*.9)*2.5-2)*sc,21-10.5*sc-1.6);if(t>8)sprite(HEART,cx+10,8-(t-8)*.4)};
+      if(t===A.len-1){o.zu=false;o.wink=true;say('Brummmm … mehr davon!')}
+      break}
+    case'pet':{o.upL=o.upR=1;o.zu=t<7;o.wink=t>=7;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,cx+4,7-t*.6);break}
+  }
+  if(st.krank&&A?.type!=='med')after=(a=>()=>{a();sprite([".EEE.","E.E.E","EEEEE",".E.E."],cx+4,4+Math.sin(f*.3)*.6)})(after);
+  if(z){y=12;for(let k=0;k<2;k++)out+=`<text x="${cx+12+k*2}" y="${10-((f*.3+k*3)%6)}" font-size="${3-k}" fill="var(--${nacht?'moon':'ink'})" font-family="var(--font)">z</text>`}
+  bear(cx,y,o);after();
+  if(wt==='schnee')for(let k=0;k<14;k++)px(((k*7.3)+Math.sin(f*.05+k))%32,(k*5.1+f*.15)%22,'snow',.45,.45);
+  if(A&&++A.t>=A.len)anim=null;
+  svg.innerHTML=out;
+}
+setInterval(frame,150);
+
+// Handlungen
+function act(ch,txt,n,type,len){
+  if(st.ei){say('Erst muss der Eisbär aus der Höhle. Tipp drauf!');return}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
+  for(const k in ch)st[k]=clamp(st[k]+ch[k]);
+  buzz(n);start(type,len);say(txt);render();save();
+}
+$('pet').onclick=ev=>{
+  if(game)return gameTap(ev);
+  if(!st.ei)return act({laune:5},'Brumm! ♥',1,'pet',12);
+  st.taps++;start('wobble',6);
+  if(st.taps<5){say(['Da raschelt was in der Höhle …','Zwei Äuglein!','Eine schwarze Nase!','Gleich kommt er raus!'][st.taps-1]);save();return}
+  st.ei=false;st.geb=Date.now();buzz(3);start('pet',12);say('Hallo! Wie soll ich heißen?');$('nameform').hidden=false;render();save();
+};
+function showName(){$('name').textContent=nm().toUpperCase()}
+$('nameform').onsubmit=e=>{e.preventDefault();st.name=($('nm').value||'').trim().slice(0,12)||'Polar';$('nameform').hidden=true;showName();say(`Ich heiße jetzt ${st.name}!`);save()};
+$('b-feed').onclick=()=>{if(!st.ei&&!st.schlaf&&st.poo<3&&Math.random()<.4)st.poo++;act({satt:25},'Mampf! Ein Fisch.',2,'eat',16)};
+$('b-play').onclick=()=>{if(st.ei||st.schlaf)return act({},'',1);$('spielwahl').hidden=!$('spielwahl').hidden;if(!$('spielwahl').hidden)say('Schneeball werfen oder kraulen?')};
+$('p-kraul').onclick=()=>{$('spielwahl').hidden=true;act({laune:15,sauber:2},`${nm()} lässt sich kraulen …`,2,'kraul',28)};
+$('p-ball').onclick=()=>{$('spielwahl').hidden=true;st.krank?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Schneeball! … und weg damit!',3,'play',26)};
+$('b-sleep').onclick=()=>{if(st.ei)return say('Erst muss der Eisbär aus der Höhle. Tipp drauf!');st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-clean').onclick=()=>{if(!st.schlaf&&!st.ei)st.poo=0;act({sauber:40,laune:5},'Platsch! Ab ins Eismeer.',2,'clean',22)};
+$('b-med').onclick=()=>{
+  if(st.ei||st.schlaf)return act({},'',1);
+  if(!st.krank){buzz(1);say('Ich bin doch gesund!');return}
+  st.krank=false;st.krankMin=0;act({laune:10},'Bäh! … Aber jetzt geht es mir besser!',2,'med',16);
+};
+$('b-hut').onclick=()=>{if(st.ei)return say('Erst muss der Eisbär aus der Höhle. Tipp drauf!');nextHat()};
+$('g-robbe').onclick=()=>startGame('robbe');$('g-fisch').onclick=()=>startGame('fisch');$('g-schwimm').onclick=()=>startGame('schwimm');
+// Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
+for(const id of ['pet','b-feed','b-play','p-ball','p-kraul','b-sleep','b-clean','b-med','g-robbe','g-fisch','g-schwimm','b-hut']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
+setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();save()},30000);
+showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
+render();save();frame();{const m=mood();if(st.ei)say('Eine Schneehöhle! Tipp sie an …');else if(m)say(m)}
+</script>
+</body></html>
