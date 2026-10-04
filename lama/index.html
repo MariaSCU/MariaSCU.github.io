@@ -11,10 +11,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
 <style>
 *{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
-/* Layout wie Crebs: Himmel-Fenster mit Lama, darunter Werte und runde Tasten */
-:root{--bg:#f6f4ef;--fg:#2a2622;--sky:#e6eef4;--sun:#f2c14e;--cloud:#ffffff;--mtn:#cfd8e0;--ink:#3a332c;--line:#c9c1b4;--eye:#1d1d1f;--lama:#d9b48a;--lama2:#9c7652;--deck:#d9466f;--hay:#e0b84a;--grass:#6fa45a;--btn:#b98a5e;--font:"Silkscreen",ui-monospace,monospace;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16151a;--fg:#e8e4de;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--mtn:#2a3343;--ink:#ddd6cc;--line:#3a3f4c;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#16151a;--fg:#e8e4de;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--mtn:#2a3343;--ink:#ddd6cc;--line:#3a3f4c;color-scheme:dark}
+/* Layout wie Crebs II und Polar: Fenster mit Lama, darunter Werte, runde Tasten und Extras */
+:root{--bg:#f6f4ef;--fg:#2a2622;--sky:#e6eef4;--sun:#f2c14e;--cloud:#ffffff;--mtn:#cfd8e0;--ink:#3a332c;--line:#c9c1b4;--eye:#1d1d1f;--lama:#d9b48a;--lama2:#9c7652;--deck:#d9466f;--hay:#e0b84a;--grass:#6fa45a;--btn:#b98a5e;--night:#141a2b;--moon:#efe9cf;--snow:#ffffff;--grau:#cdd3da;--rain:#5b8fc7;--blass:#e9e2c8;--rot:#d9534f;--orange:#f08a3c;--water:#4f8fc0;--tuerkis:#2fb3a6;--nachtblau:#2b3a6b;--alpaka:#f4efe6;--font:"Silkscreen",ui-monospace,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16151a;--fg:#e8e4de;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--mtn:#2a3343;--ink:#ddd6cc;--line:#3a3f4c;--grau:#273142;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#16151a;--fg:#e8e4de;--sky:#1d2533;--sun:#e9e4c9;--cloud:#323b4c;--mtn:#2a3343;--ink:#ddd6cc;--line:#3a3f4c;--grau:#273142;color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);display:grid;place-items:center;padding-inline:16px}
 .egg{width:min(340px,100%);display:grid;gap:14px;justify-items:center;padding-block:24px}
@@ -27,27 +27,42 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--btn)}
 .bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
 .btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
 .btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;background:var(--btn);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
-.btns label:active{transform:scale(.92)}.btns label:has(input:focus-visible){outline:3px solid var(--ink)}
 .sub{display:none;grid-template-columns:1fr 1fr;gap:8px;width:100%}.sub.on{display:grid}
-.sub label{display:grid;place-items:center;position:relative;font-size:10px;padding:10px 4px;border-radius:12px;background:var(--btn);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}.sub label:active{transform:scale(.95)}
+.sub label{display:grid;place-items:center;position:relative;font-size:10px;padding:10px 4px;border-radius:12px;background:var(--btn);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
+.mehr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+.mehr label{position:relative;font-size:10px;padding:9px 14px;border-radius:999px;border:2px solid var(--btn);cursor:pointer;user-select:none;-webkit-user-select:none}
+.btns label:active,.mehr label:active,.sub label:active{transform:scale(.93)}
+.btns label:has(input:focus-visible),.mehr label:has(input:focus-visible),.sub label:has(input:focus-visible){outline:3px solid var(--ink)}
 #msg{font-size:11px;min-height:1.4em;text-align:center}
+#link{font-size:10px;word-break:break-all;text-align:center;user-select:all;-webkit-user-select:all}#link[hidden]{display:none}
+.form{display:flex;gap:8px;width:100%}.form[hidden]{display:none}
+.form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
+.form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--btn);color:#fff}
 </style>
 </head>
 <body>
 <div class="egg">
-  <h1>LAMA</h1>
+  <h1 id="name">LAMA</h1>
   <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" aria-label="Lama streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
-  <div id="msg">Hallo! Ich bin dein Lama.</div>
+  <div id="msg">Hallo!</div>
+  <form id="nameform" class="form" hidden><input id="nm" maxlength="12" placeholder="Wie soll ich heißen?" autocomplete="off" aria-label="Name"><button>Fertig</button></form>
+  <form id="grussform" class="form" hidden><input id="gr" maxlength="60" placeholder="Dein Gruß" autocomplete="off" aria-label="Gruß"><button>Link teilen</button></form>
+  <div id="link" hidden></div>
+  <form id="erform" class="form" hidden><input id="ez" type="time" value="17:00" aria-label="Uhrzeit"><button>In den Kalender</button></form>
   <div class="stats" id="stats"></div>
   <div class="btns">
     <label id="b-feed"><input type="checkbox" switch class="sw"><span>Heu</span></label><label id="b-play"><input type="checkbox" switch class="sw"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw"><span>Bürste</span></label>
   </div>
   <div class="sub" id="pflege"><label id="b-brush"><input type="checkbox" switch class="sw"><span>Bürsten</span></label><label id="b-color"><input type="checkbox" switch class="sw"><span>Fellfarbe</span></label></div>
+  <div class="mehr">
+    <label id="b-med"><input type="checkbox" switch class="sw"><span>Medizin</span></label>
+    <label id="g-spuck"><input type="checkbox" switch class="sw"><span>Zielspucken</span></label><label id="g-heu"><input type="checkbox" switch class="sw"><span>Heu fangen</span></label><label id="g-lauf"><input type="checkbox" switch class="sw"><span>Wettlauf</span></label><label id="b-decke"><input type="checkbox" switch class="sw"><span>Decken</span></label><label id="b-gruss"><input type="checkbox" switch class="sw"><span>Gruß</span></label><label id="b-erin"><input type="checkbox" switch class="sw"><span>Erinnerung</span></label>
+  </div>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
-// Haptik wie bei Crebs: Fingertipp auf ein Schalter-Feld = Tick am iPhone, Android: vibrate.
+// Haptik wie bei Crebs: iPhone über Schalter-Feld, Android über vibrate
 function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
 function buzz(n=1,gap=120){
   if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_, i)=>i%2?gap:40));return}
@@ -58,113 +73,269 @@ function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
 // Werte
 const clamp=v=>Math.max(0,Math.min(100,v));
 const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Flausch'};
-const DEF={fell:0,satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,geb:Date.now(),t:Date.now()};
-let st=DEF;try{st={...DEF,...JSON.parse(localStorage.getItem('lama')||'{}')}}catch(e){}
+const DEF={fell:0,satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,ei:true,taps:0,name:'',pfSum:0,pfMin:0,variante:'',stufe:'baby',nacht:false,krank:false,krankMin:0,punkte:0,decke:'klassik',feierTag:'',geb:Date.now(),t:Date.now()};
+let st=DEF;try{const alt=JSON.parse(localStorage.getItem('lama')||'null');
+  // Lama aus der ersten Version: schon geschlüpft, behält Alter und Fellfarbe
+  st={...DEF,...(alt||{}),...(alt&&!('ei' in alt)?{ei:false}:{})}}catch(e){}
 function save(){st.t=Date.now();try{localStorage.setItem('lama',JSON.stringify(st))}catch(e){}}
-// Fellfarben: [Name, Fell, Schatten, Auge]
-const FELL=[['Karamell','#d9b48a','#9c7652','#1d1d1f'],['Schneeweiß','#f4efe6','#bdb4a4','#1d1d1f'],['Schokobraun','#8a5a3a','#5a3a24','#f4efe6'],['Silbergrau','#a3a3a8','#6b6b70','#1d1d1f'],['Nachtschwarz','#3c3632','#1f1b18','#f4efe6'],['Zuckerrosa','#f0b3c4','#c07c8f','#1d1d1f']];
-function fell(){const c=FELL[st.fell%FELL.length],d=document.documentElement.style;d.setProperty('--lama',c[1]);d.setProperty('--lama2',c[2]);d.setProperty('--eye',c[3])}
-fell();
 function say(t){$('msg').textContent=t}
+const nm=()=>st.name||'Lama';
 // Pro Minute: Werte sinken (im Schlaf steigt Energie). Abwesenheit wird nachgeholt, max. 24 h.
 function tick(min){
+  if(st.ei)return;
   const z=st.schlaf;
   st.satt=clamp(st.satt-min*(z?.3:.6));st.laune=clamp(st.laune-min*(z?.1:.5));
   st.sauber=clamp(st.sauber-min*.3);st.energie=clamp(st.energie+min*(z?2:-.4));
   if(Math.random()<min/20&&st.poo<3)st.poo++;
   st.sauber=clamp(st.sauber-st.poo*min*.5);
-  if(z&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
+  // Wachstum: Pflege über die Zeit entscheidet, wie das erwachsene Lama aussieht
+  st.pfSum+=min*(st.satt+st.laune+st.energie+st.sauber)/4;st.pfMin+=min;
+  if(stage()==='gross'&&!st.variante){const p=st.pfMin?st.pfSum/st.pfMin:70;st.variante=p>=65?'flausch':p>=40?'normal':'zottel'}
+  // Krank erst nach einer Stunde Vernachlässigung; das Lama stirbt nie
+  const schlecht=['satt','laune','sauber'].filter(k=>st[k]<20).length>=2;
+  if(!st.krank){st.krankMin=schlecht?st.krankMin+min:Math.max(0,st.krankMin-min);if(st.krankMin>=60){st.krank=true;say('Mir ist schlecht …')}}
+  else st.laune=clamp(st.laune-min*.5);
+  const n=isNight(new Date());
+  if(n&&!st.nacht){st.schlaf=true;say('Gute Nacht!')}
+  if(!n&&st.nacht){st.schlaf=false;say('Guten Morgen!')}
+  st.nacht=n;
+  if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
 }
+function isNight(d){const h=d.getHours();return h>=21||h<7}
+function stage(){const d=(Date.now()-st.geb)/864e5;return d<1?'baby':d<4?'kind':'gross'}
 tick(Math.min(1440,(Date.now()-st.t)/60000));
+// Wetter nach Jahreszeit: pro Stunde fest ausgewürfelt, damit es nicht ständig wechselt
+function weather(d){
+  const m=d.getMonth(),r=((d.getFullYear()*400+m*31+d.getDate())*24+d.getHours())*2654435761%1000/1000;
+  if(m===11||m<2)return r<.6?'schnee':'klar';
+  if(m<5)return r<.4?'regen':'klar';
+  if(m<8)return r<.15?'regen':'klar';
+  return r<.5?'blaetter':r<.8?'regen':'klar';
+}
+// Geburtstag: Jahrestag; dazwischen jede volle Woche eine kleine Feier
+function feier(d){
+  if(st.ei)return null;const g=new Date(st.geb),tage=Math.floor((d-st.geb)/864e5);
+  if(d.getMonth()===g.getMonth()&&d.getDate()===g.getDate()&&d.getFullYear()>g.getFullYear())return'geburtstag';
+  return tage>0&&tage%7===0?'woche':null;
+}
+function feierCheck(){
+  const d=new Date(),fe=feier(d),key=d.toDateString();if(!fe||st.feierTag===key)return;st.feierTag=key;
+  const j=d.getFullYear()-new Date(st.geb).getFullYear(),w=Math.floor((d-st.geb)/864e5/7);
+  say(fe==='geburtstag'?`Alles Gute zum ${j}. Geburtstag, ${nm()}!`:`Hurra, ${nm()} ist ${w} Woche${w>1?'n':''} alt!`);
+}
+const STUFE={baby:'Cria',kind:'Jungtier',gross:'Groß'},SCALE={baby:.6,kind:.8,gross:1};
 function render(){
+  const sg=st.ei?st.stufe:stage();if(sg!==st.stufe){st.stufe=sg;say(sg==='kind'?'Ich bin gewachsen!':'Ich bin jetzt ein großes Lama!')}
   const tage=Math.floor((Date.now()-st.geb)/864e5);
   document.querySelector('#b-sleep span').textContent=st.schlaf?'Weck':'Schlaf';
-  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('');
+  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'} · ${STUFE[st.stufe]}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('');
 }
 function mood(){
-  const low=Object.keys(NAMES).filter(k=>st[k]<25);
+  if(st.krank&&!st.schlaf)return'Mir ist schlecht … Medizin?';
   if(st.schlaf)return'Zzz …';
+  const low=Object.keys(NAMES).filter(k=>st[k]<25);
   return low.length?{satt:'Ich hab Hunger auf Heu!',laune:'Mir ist langweilig …',energie:'So müde …',sauber:'Mein Fell ist verfilzt!'}[low[0]]:null;
 }
+// Fellfarben: [Name, Fell, Schatten, Auge]
+const FELL=[['Karamell','#d9b48a','#9c7652','#1d1d1f'],['Schneeweiß','#f4efe6','#bdb4a4','#1d1d1f'],['Schokobraun','#8a5a3a','#5a3a24','#f4efe6'],['Silbergrau','#a3a3a8','#6b6b70','#1d1d1f'],['Nachtschwarz','#3c3632','#1f1b18','#f4efe6'],['Zuckerrosa','#f0b3c4','#c07c8f','#1d1d1f']];
+function fell(){const c=FELL[st.fell%FELL.length],d=document.documentElement.style;d.setProperty('--lama',c[1]);d.setProperty('--lama2',c[2]);d.setProperty('--eye',c[3])}
+fell();
 
 // Zeichnen: Szene aus Pixeln, 32 × 24 Felder
 const svg=$('scene');let out='';
 const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
-const COL={K:'ink',H:'hay',G:'grass'};
+const COL={K:'ink',H:'hay',G:'grass',R:'rot',S:'sun',A:'alpaka',D:'eye',L:'line',P:'blass',X:'deck',B:'water'};
 const sprite=(rows,x,y)=>rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(COL[ch])px(x+i,y+j,COL[ch])}));
-const HAY=[".H.H.","HHHHH","HHHHH"],BALL=[".K.","KKK",".K."],HEART=[".K.K.","KKKKK",".KKK.","..K.."],POO=[".K.","KKK"],TUFT=["G.G",".G."];
-// Lama von der Seite: langer Hals, Ohren, bunte Decke (R), Schwänzchen. X = Fell, K = Auge.
+const HAY=[".H.H.","HHHHH","HHHHH"],BALL=[".K.","KKK",".K."],HEART=[".R.R.","RRRRR",".RRR.","..R.."],POO=[".K.","KKK"],TUFT=["G.G",".G."],DOSE=["RR","SS","RR"];
+const ALPAKA=["......AA..",".....AAAA.",".....ADAAA",".....AAAA.",".....AA...","AAAAAAAA..","AAAAAAAA..",".A.A..A.A.",".A.A..A.A."];
+// Lama von der Seite: langer Hals, Ohren, Decke (R), Schwänzchen. X = Fell, K = Auge.
 const STAND=["..........X.X.",".........XXXX.",".........XKXXX",".........XXXXX",".........XXX..","X........XX...",".XXRRRRRXXX...","XXXRRRRRXXX...",".XXXXXXXXXX...",".X.X....X.X...",".X.X....X.X..."];
 const GRAZE=["..............","..............","..............","..............","..............","X.............",".XXRRRRRXX....","XXXRRRRRXXX..X",".XXXXXXXXXXXXX",".X.X....X.XKXX",".X.X....X.X.XX"];
+// Decken mit Bommeln: mit Spielpunkten freispielen. c = Farbmuster der Decke, b = Bommelfarbe
+const DECKEN={klassik:{p:0,n:'Rote Decke',c:()=>'deck',b:['orange','tuerkis','hay']},
+  regenbogen:{p:10,n:'Regenbogen-Decke',c:i=>['rot','orange','hay','grass','water'][i],b:['deck','tuerkis','orange']},
+  anden:{p:25,n:'Anden-Decke',c:(i,j)=>(i+j)%2?'tuerkis':'deck',b:['orange','hay','nachtblau']},
+  sterne:{p:40,n:'Sternen-Decke',c:(i,j)=>(i+j*3)%4===1?'sun':'nachtblau',b:['sun','deck','tuerkis']},
+  gold:{p:60,n:'Gold-Decke',c:(i,j)=>i%2===j%2?'sun':'hay',b:['deck','rot','deck']}};
+const frei=pt=>Object.keys(DECKEN).filter(k=>pt>=DECKEN[k].p);
+const oben=(y,lie)=>{const sc=SCALE[st.stufe]||1;return y+11*(1-sc)+(lie?2*sc:0)};
+// Maul-Position vorn am Kopf (für Spucke, Heu, Ball)
+function mouth(x,y,face,graze){const sc=SCALE[st.stufe]||1;return[x+7+((graze?13:13.5)-7)*sc*face,oben(y)+(graze?10.5:3.5)*sc]}
 // face: 1 = schaut nach rechts, -1 = nach links
 function lama(x,y,o){
   let r=(o.graze?GRAZE:STAND).map(s=>[...s]);
   if(o.leg){r[9]=[..."..X.X....X.X.."];r[10]=[...".X...X..X...X."]}
   if(o.mund){if(o.graze)r[10][13]='.';else r[3][13]='.'}
+  const sc=SCALE[st.stufe]||1,v=st.stufe==='gross'?st.variante:'';
+  if(v==='flausch'&&!o.graze)r[0][11]='X';
   if(o.lie)r=r.slice(0,9);
-  const R=r.map(a=>a.join('')),a=o.turn||0,d=Math.sin(a)*2.6,sx=Math.cos(a)*o.face;
-  const g=(dx,dy,shadow)=>{out+=`<g transform="translate(${x+7*(1-sx)+dx} ${y+dy}) scale(${sx} 1)">`;
-    R.forEach((row,j)=>[...row].forEach((c,i)=>{
+  const a=o.turn||0,d=Math.sin(a)*2.6,sx=Math.cos(a)*o.face,dk=DECKEN[st.decke],fur=st.krank?'blass':v==='zottel'?'lama2':'lama',T=oben(y,o.lie);
+  const g=(dx,dy,shadow)=>{
+    out+=`<g transform="translate(${x+7+dx} ${T+dy}) rotate(${o.rot||0} 0 6) scale(${sx*sc} ${sc}) translate(-7 0)">`;
+    r.forEach((row,j)=>row.forEach((c,i)=>{
       if(c==='.')return;
-      if(shadow)px(i,j,'lama2');
-      else px(i,j,c==='R'?'deck':c==='K'?(o.zu?'lama':'eye'):'lama');
-    }));out+='</g>'};
+      if(shadow)return px(i,j,'lama2');
+      if(c==='R')px(i,j,dk?dk.c(i-3,j-6):fur);
+      else if(c==='K'){if(o.zu||o.wink){px(i,j,fur);px(i,j+.6,'eye',1,.3)}else px(i,j,'eye')}
+      else px(i,j,fur);
+    }));
+    if(!shadow&&dk){[3,5,7].forEach((bx,k)=>{px(bx+.5,8,dk.b[k],.12,.4);px(bx+.15,8.35,dk.b[k],.8,.8)});if(!o.graze){px(9.9,-.8,dk.b[0],.8,.8);px(11.9,-.8,dk.b[1],.8,.8)}}
+    if(!shadow&&v==='zottel')for(const bx of [2,5,8])px(bx,9,'lama2',.5,.6);
+    if(!shadow&&v==='flausch'&&!o.graze&&(f>>2)%6===0)px(9,-1,'sun',.5,.5);
+    out+='</g>'};
   for(let k=Math.abs(d);k>.01;k-=.4)g(-Math.sign(d)*k,-k*.35,true);
   g(0,0,false);
 }
-let anim=null,cx=6,dir=1,f=0,spin=1;
+let anim=null,cx=6,dir=1,f=0,spin=1,game=null,wink=0;
 function start(type,len){anim={type,t:0,len}}
-// Maul-Position (vorne am Kopf), abhängig von Blickrichtung
-const mouthX=()=>dir>0?cx+14:cx-1;
+function nextDecke(){
+  const fr=frei(st.punkte),liste=['',...fr];st.decke=liste[(liste.indexOf(st.decke)+1)%liste.length];
+  const nx=Object.keys(DECKEN).find(k=>DECKEN[k].p>st.punkte);
+  say((st.decke?`Schick! ${DECKEN[st.decke].n} mit Bommeln.`:'Ohne Decke.')+(nx&&fr.length<2?` Noch ${DECKEN[nx].p-st.punkte} Punkte bis zur ${DECKEN[nx].n}!`:''));buzz(1);save();
+}
+const EI='Erst muss das Lama aus dem Heu. Tipp drauf!';
+function canPlay(){
+  if(st.ei){say(EI);return false}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return false}
+  if(st.krank){say('Mir geht es nicht gut zum Spielen …');return false}
+  return true}
+// Minispiele: jedes Antippen der Szene ist ein Spielzug
+const POSTS=[18,23,28];
+function startGame(type){
+  if(game||!canPlay())return;anim=null;$('pflege').classList.remove('on');
+  game={type,t:0,score:0,n:0,x:4,tx:4,me:0,rx:0};newRound();
+  say({spuck:'Tipp auf die Dose – das Lama spuckt sie runter!',heu:'Tipp dorthin, wo das Heu hinfällt!',lauf:'Tipp ganz schnell, um zu rennen!'}[type]);
+}
+function newRound(){Object.assign(game,{fx:8+Math.random()*17,fy:-3,post:Math.floor(Math.random()*3),wait:3+Math.floor(Math.random()*6),up:0,hit:false,miss:false})}
+function endGame(){
+  const g=game;game=null;const pts=g.type==='lauf'?(g.win?10:3):g.score;
+  const vorher=frei(st.punkte).length;st.punkte+=pts;const neu=frei(st.punkte);
+  st.laune=clamp(st.laune+10+pts*2);st.energie=clamp(st.energie-10);st.satt=clamp(st.satt+(g.type==='heu'?pts*2:0));
+  buzz(3);say(`Spiel vorbei: ${pts} Punkte!`+(g.type==='lauf'?(g.win?' Gewonnen!':' Das Alpaka war schneller!'):'')+(neu.length>vorher?` Neu: ${DECKEN[neu[neu.length-1]].n}!`:''));render();save();
+}
+function tapX(ev){const r=svg.getBoundingClientRect?.()||{left:0,width:320};return((ev?.clientX??r.left+r.width/2)-r.left)/r.width*32}
+function gameTap(ev){
+  const g=game,x=tapX(ev),sc=SCALE[st.stufe]||1;
+  if(g.type==='spuck'){
+    const h=POSTS.reduce((b,p,i)=>Math.abs(p-x)<Math.abs(POSTS[b]-x)?i:b,0);g.shot={t:0,x1:POSTS[h]};tock();
+    if(g.up>0&&h===g.post&&!g.hit){g.hit=true;g.score++;say('Treffer! '+g.score)}
+  }
+  if(g.type==='heu')g.tx=Math.max(-2,Math.min(18,x-7-6.5*sc));
+  if(g.type==='lauf'&&!g.done)g.me+=1;
+}
+function drawGame(){
+  const g=game,o={face:1,leg:(f>>1)&1};g.t++;
+  if(g.type==='spuck'){
+    POSTS.forEach(p=>px(p-.25,17,'line',.5,4));
+    const [mx,my]=mouth(1,10,1);lama(1,10,{face:1,mund:g.shot&&g.shot.t<5});
+    if(g.wait>0){g.wait--;if(!g.wait)g.up=Math.max(5,11-g.score)}
+    else if(g.up>0){g.up--;const p=POSTS[g.post];if(g.hit){const k=10-g.up;sprite(DOSE,p-1+k*.5,14-k*.3+k*k*.12)}else sprite(DOSE,p-1,14);
+      if(!g.up){if(!g.hit)say('Zu langsam!');g.n++;if(g.n>=8)return endGame();newRound()}}
+    if(g.shot){const s=g.shot,p=Math.min(1,s.t/4);for(let k=0;k<3;k++){const q=Math.max(0,p-k*.12);px(mx+(s.x1-mx)*q,my+(15-my)*q-Math.sin(q*Math.PI)*2,'water',.6,.6)}if(++s.t>6)g.shot=null}
+  }
+  if(g.type==='heu'){
+    g.x+=Math.sign(g.tx-g.x)*Math.min(1.5,Math.abs(g.tx-g.x));
+    lama(g.x,10,{...o,mund:1});const [mx,my]=mouth(g.x,10,1);g.fy+=.6;sprite(HAY,Math.round(g.fx),Math.round(g.fy));
+    if(!g.miss&&g.fy+2>=my){if(Math.abs(g.fx+2.5-mx)<3.5){g.score++;tock();say('Gefangen! '+g.score);g.n++;newRound()}else g.miss=true}
+    if(g.miss&&g.fy>=18){say('Plumps, daneben!');g.n++;newRound()}
+    if(g.n>=8)return endGame();
+  }
+  if(g.type==='lauf'){
+    const sc=SCALE[st.stufe]||1;
+    px(0,12,'line',32,.25);px(29.6,1,'rot',.4,20);
+    if(!g.done)g.rx+=.42;sprite(f%4<2?ALPAKA:ALPAKA.slice(0,7).concat(["A..A.A..A.","A..A.A..A."]),Math.round(g.rx),3);
+    lama(g.me,10,{face:1,leg:g.me%2});
+    if(!g.done&&(g.me+7+7*sc>=30||g.rx+10>=30)){g.done=true;g.win=g.me+7+7*sc>=30;g.end=g.t}
+    if(g.done&&g.t-g.end>6)return endGame();
+  }
+  if(game&&g.type!=='lauf')out+=`<text x="1" y="3" font-size="2.4" fill="var(--ink)" font-family="var(--font)">${g.score}</text>`;
+}
+// Start: ein Heuhaufen. Mit jedem Tippen guckt das Lama-Baby ein Stück weiter heraus.
+function drawHeap(){
+  const w=anim?.type==='wobble'?(anim.t%2?.4:-.4):0;
+  if(st.taps>=1){px(13.5+w,12,'lama',.8,1.6);px(17.5+w,12,'lama',.8,1.6)}
+  if(st.taps>=3){px(13.5+w,13.4,'lama',4.8,2.6);px(14.4+w,14.2,'eye',.7,.7);px(16.6+w,14.2,'eye',.7,.7)}
+  out+=`<ellipse cx="${16+w}" cy="21" rx="9" ry="${st.taps>=4?4.6:5.6}" fill="var(--hay)"/>`;
+  for(let k=0;k<7;k++)px(9+k*2.2+w,17+(k%3),'lama2',.25,1.2);
+  if(st.taps>=2&&st.taps<3){px(14.4+w,16,'eye',.7,.7);px(16.6+w,16,'eye',.7,.7)}
+}
 function frame(){
   out='';f++;
   const A=anim,t=A?A.t:0,z=st.schlaf;
-  let y=10,o={face:dir,leg:0,zu:z||f%40<2},after=()=>{};
-  out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
-  out+=`<polygon points="-2,21 6,11 13,21" fill="var(--mtn)"/><polygon points="9,21 18,9 27,21" fill="var(--mtn)"/>`;
-  const wx=((f*.04+16)%46)-9;out+=`<g fill="var(--cloud)"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`;
+  let y=10,o={face:dir,leg:0,zu:z||f%45<2},after=()=>{};
+  const jetzt=new Date(),nacht=isNight(jetzt),wt=weather(jetzt);
+  if(nacht){out+=`<rect width="32" height="24" fill="var(--night)"/><circle cx="27" cy="4.5" r="2.2" fill="var(--moon)"/><circle cx="28.1" cy="3.9" r="1.9" fill="var(--night)"/>`;
+    [[3,3],[8,6],[14,2],[19,5],[23,9],[11,10]].forEach(([x,y],k)=>{if((f>>3)%7!==k)px(x,y,'moon',.3,.3)})}
+  else if(wt==='schnee'||wt==='regen')out+=`<rect width="32" height="24" fill="var(--grau)"/>`;
+  else out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+  const wolke=wx=>out+=`<g fill="var(--cloud)" opacity="${nacht?.25:1}"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`;
+  // Anden-Berge mit Schneekappen
+  out+=`<polygon points="-2,21 6,11 13,21" fill="var(--mtn)"/><polygon points="9,21 18,9 27,21" fill="var(--mtn)"/><polygon points="5,12.3 6,11 7,12.3" fill="var(--snow)" opacity=".8"/><polygon points="16.8,10.5 18,9 19.2,10.5" fill="var(--snow)" opacity=".8"/>`;
+  wolke(((f*.04+16)%46)-9);if(wt==='regen'||wt==='schnee')wolke(((f*.03+38)%46)-9);
+  if(wt==='schnee')px(0,20.6,'snow',32,.6);
   px(0,21,'line',32,.25);
-  for(const gx of [1,15,28])sprite(TUFT,gx,19);
+  if(!game&&wt!=='schnee')for(const gx of [1,15,28])sprite(TUFT,gx,19);
+  if(st.ei){drawHeap();if(anim&&++anim.t>=anim.len)anim=null;svg.innerHTML=out;return}
+  if(game){drawGame();svg.innerHTML=out;return}
   for(let i=0;i<st.poo;i++)sprite(POO,29-i*3,19);
   if(!A&&!z){
     if(f%3===0){cx+=dir;if(cx<1||cx>17){dir*=-1;cx+=dir}}
     o.face=dir;o.leg=(f>>1)&1;
-    if(f%50===0&&Math.random()<.7){const k=['graze','spit','turn','hop'][Math.floor(Math.random()*4)];spin=-spin;start(k,{graze:40,spit:24,turn:30,hop:24}[k]);say({graze:'Lama zupft Gras …',spit:'Pfft! Lama spuckt.',turn:'Lama schaut sich um …',hop:'Hüpf, hüpf!'}[k])}
+    if(f%50===0&&Math.random()<.7){const k=['graze','spit','turn','hop','summ'][Math.floor(Math.random()*5)];spin=-spin;start(k,{graze:40,spit:24,turn:30,hop:24,summ:36}[k]);
+      say({graze:`${nm()} zupft Gras …`,spit:`Pfft! ${nm()} spuckt.`,turn:`${nm()} schaut sich um …`,hop:'Hüpf, hüpf!',summ:`${nm()} summt ein Lied …`}[k])}
+    if(!wink&&Math.random()<.012){wink=7;if(Math.random()<.3)say(`${nm()} klimpert mit den Wimpern 😉`)}
   }
-  const mx=mouthX();
+  if(wink>0){wink--;if(!z)o.wink=true}
+  const [mx,my]=mouth(cx,10,dir);
   switch(A?.type){
     case'eat':{ // Heu fällt vors Maul, Lama frisst es
-      const hx=dir>0?cx+13:cx-4;
+      const hx=Math.round(mouth(cx,10,dir,1)[0]-2.5);
       if(t<8)sprite(HAY,hx,t*1.6-3);
       else{o.graze=1;o.mund=t%2;sprite(HAY.map(r=>r.slice(0,Math.max(0,5-Math.floor((t-8)/2)))),hx,18)}
       break}
     case'play':{ // Ball fliegt rein, Lama springt und köpft ihn weg
       const side=dir>0?31:-2;let bx,by;
-      if(t<10){const p=t/10;bx=side+(mx-side)*p;by=19-12*p}
-      else{const p=(t-10)/10;bx=mx+(side-mx)*p;by=7-6*p+14*p*p}
+      if(t<10){const p=t/10;bx=side+(mx-side)*p;by=19-(19-my)*p}
+      else{const p=(t-10)/10;bx=mx+(side-mx)*p;by=my-6*p+14*p*p}
       if(t<20)after=()=>sprite(BALL,Math.round(bx)-1,Math.round(by));
       if(t>=7&&t<13){y=10-Math.round(Math.sin((t-7)/6*Math.PI)*3);o.leg=1}
-      if(t>=20){y=t%2?9:10}
+      if(t>=20)y=t%2?9:10;
       break}
-    case'clean':{ // Bürsten: Fell-Flusen und Seifenblasen
+    case'clean':{ // Bürsten: Seifenblasen und Flusen
       o.zu=true;
       for(let k=0;k<5;k++)out+=`<circle cx="${cx+2+k*2.2}" cy="${19-((t*1.4+k*3)%14)}" r=".8" fill="none" stroke="var(--ink)" stroke-width=".25"/>`;
       break}
     case'color':{ // Glitzersterne rund ums Lama
       o.zu=true;o.turn=Math.sin(t/A.len*Math.PI*2)*.5;
-      for(let k=0;k<6;k++){const a=k+t*.4,sx=cx+7+Math.cos(a)*8,sy=15+Math.sin(a)*5;px(sx,sy,'sun',.8,.8)}
+      for(let k=0;k<6;k++){const a=k+t*.4;px(cx+7+Math.cos(a)*8,15+Math.sin(a)*5,'sun',.8,.8)}
       break}
     case'turn':{o.turn=spin*Math.sin(t/A.len*Math.PI)*.75;break}
-    case'pet':{o.zu=true;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,dir>0?cx+9:cx,4-t*.4);break}
+    case'pet':{o.zu=true;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,mx-2.5-dir*2,4-t*.4);break}
     case'graze':{o.graze=1;o.mund=(t>>1)&1;break}
     case'spit':{ // Maul auf, Spucke fliegt im Bogen nach vorn
       o.mund=1;if(t===4)tock();
-      if(t>=4)for(let k=0;k<3;k++){const p=t-4-k*2;if(p>=0)px(mx+dir*p*1.2,y+3+p*p*.04,'cloud',.7,.7)}
+      if(t>=4)for(let k=0;k<3;k++){const p=t-4-k*2;if(p>=0)px(mx+dir*p*1.2,my+p*p*.04,'water',.7,.7)}
       break}
     case'hop':{const h=Math.abs(Math.sin(t*.5))*3;y=10-Math.round(h);o.leg=h>1?1:0;if(h<.4&&t>2)tock();break}
+    case'summ':{ // Lamas summen: Noten steigen auf
+      o.zu=t%12<8;o.mund=t%4<2;
+      for(let k=0;k<2;k++){const p=(t+k*9)%18;out+=`<text x="${mx+dir*(1+p*.25)}" y="${my-1-p*.4}" font-size="2.4" fill="var(--ink)" opacity="${1-p/18}">♪</text>`}
+      break}
+    case'med':{
+      if(t<8)sprite(["RPP"],Math.round(mx-1.5),2+t*(my-2)/8);else{o.zu=true;for(let k=0;k<4;k++)px(cx+2+k*3,12-(t-8)*.5-(k%2),'sun',.5,.5)}
+      break}
+    case'wave':{o.turn=Math.sin(t*.3)*.3;y=10-(t%8<4?1:0);break}
   }
-  if(z){o.lie=1;o.zu=true;y=12;for(let k=0;k<2;k++)out+=`<text x="${dir>0?cx+14+k*2:cx-4-k*2}" y="${10-((f*.3+k*3)%6)}" font-size="${3-k}" fill="var(--ink)" font-family="var(--font)">z</text>`}
+  if(st.krank&&A?.type!=='med')after=(a=>()=>{a();sprite([".KKK.","K.K.K","KKKKK",".K.K."],mx-2.5,my-7+Math.sin(f*.3)*.6)})(after);
+  if(z){o.lie=1;o.zu=true;for(let k=0;k<2;k++)out+=`<text x="${dir>0?mx+k*2:mx-3-k*2}" y="${my-((f*.3+k*3)%6)}" font-size="${3-k}" fill="var(--${nacht?'moon':'ink'})" font-family="var(--font)">z</text>`}
+  const fe=feier(jetzt);
+  if(fe)[".S.S.S.",".B.B.B.","PPPPPPP","XXXXXXX","PPPPPPP"].forEach((r,j)=>[...r].forEach((c,i)=>{if(COL[c])px(24+i,16+j,COL[c])}));
   lama(cx,y,o);after();
+  if(fe)for(let k=0;k<12;k++)px((k*5.3+Math.sin(f*.1+k)*2+32)%32,(k*3.1+f*.35)%21,['deck','sun','water','grass'][k%4],.5,.5);
+  for(let k=0;k<14;k++){const sx=(k*7.3)%32,sy=(k*5.1+f*(wt==='regen'?.9:.15))%22;
+    if(wt==='schnee')px((sx+Math.sin(f*.05+k))%32,sy,'snow',.45,.45);
+    if(wt==='regen')px(sx,sy,'rain',.15,.9);
+    if(wt==='blaetter'&&k<6)px((sx+f*.08)%32,(k*3.7+f*.1)%21,k%2?'orange':'sun',.6,.6)}
   if(A&&++A.t>=A.len)anim=null;
   svg.innerHTML=out;
 }
@@ -172,22 +343,63 @@ setInterval(frame,150);
 
 // Handlungen
 function act(ch,txt,n,type,len){
-  if(st.schlaf){say('Pssst, das Lama schläft.');return}
+  if(st.ei){say(EI);return}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
   for(const k in ch)st[k]=clamp(st[k]+ch[k]);
   buzz(n);start(type,len);say(txt);render();save();
 }
-// Schlechte Laune? Dann spuckt das Lama beim Streicheln.
-$('pet').onclick=()=>st.laune<25&&!st.schlaf?act({laune:3},'Pfft! Lama ist beleidigt.',3,'spit',24):act({laune:5},'Mmmh, kuschelig! ♥',1,'pet',10);
+$('pet').onclick=ev=>{
+  if(game)return gameTap(ev);
+  if(!st.ei)return st.laune<25&&!st.schlaf?act({laune:3},`Pfft! ${nm()} ist beleidigt.`,3,'spit',24):act({laune:5},'Mmmh, kuschelig! ♥',1,'pet',10);
+  st.taps++;start('wobble',6);tock();
+  if(st.taps<5){say(['Da raschelt was im Heu …','Zwei Ohren!','Zwei Kulleraugen!','Gleich hüpft es raus!'][st.taps-1]);save();return}
+  st.ei=false;st.geb=Date.now();st.t=Date.now();buzz(3);start('hop',24);say('Hallo! Wie soll ich heißen?');$('nameform').hidden=false;render();save();
+};
+function showName(){$('name').textContent=nm().toUpperCase()}
+$('nameform').onsubmit=e=>{e.preventDefault();st.name=($('nm').value||'').trim().slice(0,12)||'Lama';$('nameform').hidden=true;showName();say(`Ich heiße jetzt ${st.name}!`);save()};
 $('b-feed').onclick=()=>act({satt:25,sauber:-5},'Mampf! Frisches Heu.',2,'eat',20);
-$('b-play').onclick=()=>act({laune:20,energie:-10,satt:-5},'Hopp … Kopfball!',3,'play',26);
-$('b-sleep').onclick=()=>{st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-play').onclick=()=>st.krank&&!st.ei?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Hopp … Kopfball!',3,'play',26);
+$('b-sleep').onclick=()=>{if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
 // Bürste öffnet zwei Möglichkeiten: Bürsten oder Fellfarbe wechseln
-$('b-clean').onclick=()=>{$('pflege').classList.toggle('on')};
+$('b-clean').onclick=()=>{if(st.ei)return say(EI);$('pflege').classList.toggle('on')};
 $('b-brush').onclick=()=>{$('pflege').classList.remove('on');if(!st.schlaf)st.poo=0;act({sauber:40},'Bürst, bürst – schön flauschig!',2,'clean',16)};
-$('b-color').onclick=()=>{if(st.schlaf){say('Pssst, das Lama schläft.');return}st.fell=(st.fell+1)%FELL.length;fell();act({laune:5},'Neue Fellfarbe: '+FELL[st.fell][0]+'!',2,'color',20)};
+$('b-color').onclick=()=>{if(st.schlaf)return say(`Pssst, ${nm()} schläft.`);st.fell=(st.fell+1)%FELL.length;fell();act({laune:5},'Neue Fellfarbe: '+FELL[st.fell][0]+'!',2,'color',20)};
+$('b-med').onclick=()=>{
+  if(st.ei||st.schlaf)return act({},'',1);
+  if(!st.krank){buzz(1);say('Ich bin doch gesund!');return}
+  st.krank=false;st.krankMin=0;act({laune:10},'Bäh! … Aber jetzt geht es mir besser!',2,'med',16);
+};
+$('b-decke').onclick=()=>{if(st.ei)return say(EI);nextDecke()};
+$('g-spuck').onclick=()=>startGame('spuck');$('g-heu').onclick=()=>startGame('heu');$('g-lauf').onclick=()=>startGame('lauf');
+// Gruß-Link: der Gruß steckt im Link selbst, kein Server nötig
+const grussLink=text=>location.origin+location.pathname+'?von='+encodeURIComponent(nm())+'&gruss='+encodeURIComponent(text);
+function toggle(id){for(const f of ['grussform','erform'])$(f).hidden=f===id?!$(f).hidden:true;$('link').hidden=true}
+$('b-gruss').onclick=()=>{if(st.ei)return say(EI);toggle('grussform');say('Schreib einen Gruß für dein Geschwisterchen!')};
+$('grussform').onsubmit=e=>{
+  e.preventDefault();const url=grussLink(($('gr').value||'').trim()||'Hallo!');
+  $('link').textContent=url;$('link').hidden=false;$('grussform').hidden=true;
+  if(navigator.share)navigator.share({title:`Gruß von ${nm()}`,url}).catch(()=>{});
+  else navigator.clipboard?.writeText(url).then(()=>say('Link kopiert! Jetzt in WhatsApp einfügen.'),()=>say('Link unten antippen und kopieren.'));
+};
+function grussLesen(){
+  const q=new URLSearchParams(location.search),g=q.get('gruss');if(!g)return;
+  if(!st.ei)start('wave',30);say(`${q.get('von')||'Jemand'} grüßt: ${g.slice(0,60)}`);
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+}
+// Erinnerung: tägliche Fütterungszeit als Kalendereintrag – kein Server nötig
+function ics(zeit,heute=new Date()){
+  const [h,m]=zeit.split(':'),d=heute.getFullYear()+String(heute.getMonth()+1).padStart(2,'0')+String(heute.getDate()).padStart(2,'0'),n=nm();
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Lama//DE','BEGIN:VEVENT',`UID:lama-${st.geb}@mariascu.github.io`,`DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').slice(0,15)}Z`,
+    `DTSTART:${d}T${h}${m}00`,'DURATION:PT10M','RRULE:FREQ=DAILY',`SUMMARY:${n} füttern`,`URL:${location.origin+location.pathname}`,
+    'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY',`DESCRIPTION:${n} hat Hunger!`,'END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+$('b-erin').onclick=()=>{toggle('erform');say('Wann soll ich dich jeden Tag erinnern?')};
+$('erform').onsubmit=e=>{e.preventDefault();$('erform').hidden=true;say('Tipp auf „Hinzufügen“ im Kalender.');location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics($('ez').value||'17:00'))};
 // Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
-for(const id of ['pet','b-feed','b-play','b-sleep','b-clean','b-brush','b-color']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn()}}
-setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();save()},30000);
-render();save();frame();{const m=mood();if(m)say(m)}
+for(const id of ['pet','b-feed','b-play','b-sleep','b-clean','b-brush','b-color','b-med','g-spuck','g-heu','g-lauf','b-decke','b-gruss','b-erin']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
+setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();feierCheck();save()},30000);
+showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
+render();feierCheck();save();frame();{const m=mood();if(st.ei)say('Ein Heuhaufen! Tipp ihn an …');else if(m)say(m)}
+grussLesen();
 </script>
 </body></html>
