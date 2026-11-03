@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Schnöpa">
+<meta name="theme-color" content="#d9669a">
+<style>*{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}</style>
+<title>Schnöpa-Gotchi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
+<style>
+/* Layout wie die anderen Gotchis: Fenster mit Schaf, darunter Werte und runde Tasten */
+:root{--bg:#f8f3f5;--fg:#2a2427;--sky:#dcecf5;--sun:#f2c14e;--cloud:#ffffff;--ink:#332d30;--eye:#1d1d1f;--acc:#d9669a;--wolle:#f6a9cb;--wolle2:#e889b3;--gesicht:#e8d2c6;--nase:#5a3d3d;--bein:#c9ad9f;--haut:#f8cfd8;--edge:#a85a7e;--wiese:#8fc46f;--wiese2:#6fa556;--zaun:#c9a77c;--klee:#4f9a4a;--decke:#6b8fc9;--holz:#9b6a43;--fluff:#ffffff;--night:#151a2a;--moon:#efe9cf;--grau:#cfd5da;--blass:#ede3cf;--rot:#e0505a;--rosa:#ef7b95;--hand:#f1c9a5;--wut:#6d6670;--font:"Silkscreen",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161214;--fg:#ece4e8;--sky:#1c2633;--sun:#e9e4c9;--cloud:#333c4a;--ink:#e0d8dc;--wiese:#4d6f3d;--wiese2:#3f5c33;--grau:#283038;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#161214;--fg:#ece4e8;--sky:#1c2633;--sun:#e9e4c9;--cloud:#333c4a;--ink:#e0d8dc;--wiese:#4d6f3d;--wiese2:#3f5c33;--grau:#283038;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);display:grid;place-items:center;padding-inline:16px}
+.egg{width:min(340px,100%);display:grid;gap:14px;justify-items:center;padding-block:24px}
+h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
+.lcd{width:100%;background:var(--sky);border-radius:18px;overflow:hidden}
+.tap{position:relative;display:block;cursor:pointer;touch-action:manipulation}
+#scene{width:100%;display:block;shape-rendering:crispEdges}
+.sw{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.stats{width:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:10px;align-items:center}
+.bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;max-width:100%;background:var(--acc);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
+.mehr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+.mehr label{position:relative;font-size:10px;padding:9px 14px;border-radius:999px;border:2px solid var(--acc);cursor:pointer;user-select:none;-webkit-user-select:none}
+.mehr label.laut{background:var(--acc);color:#fff}
+.btns label:active,.mehr label:active{transform:scale(.93)}
+.btns label:has(input:focus-visible),.mehr label:has(input:focus-visible){outline:3px solid var(--ink)}
+#msg{font-size:11px;min-height:1.4em;text-align:center}
+.form{display:flex;gap:8px;width:100%}
+.form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
+.form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--acc);color:#fff}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="egg">
+  <h1 id="name">BÖPI-SCHNÖPI</h1>
+  <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" id="sw-pet" aria-label="Schaf streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
+  <div id="msg">Hallo!</div>
+  <form id="nameform" class="form" hidden><input id="nm" maxlength="14" placeholder="Böpi-Schnöpi" autocomplete="off" aria-label="Name"><button>Fertig</button></form>
+  <div class="mehr" id="notfall" hidden>
+    <label id="b-wach" class="laut"><input type="checkbox" switch class="sw" id="sw-wach"><span>Ich bin wach!</span></label>
+    <label id="b-sorry" class="laut"><input type="checkbox" switch class="sw" id="sw-sorry"><span>Entschuldigung!</span></label>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="btns">
+    <label id="b-feed"><input type="checkbox" switch class="sw" id="sw-feed"><span>Futter</span></label><label id="b-play"><input type="checkbox" switch class="sw" id="sw-play"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw" id="sw-sleep"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw" id="sw-clean"><span>Bürsten</span></label>
+  </div>
+  <div class="mehr" id="spielwahl" hidden><label id="p-kraul"><input type="checkbox" switch class="sw" id="sw-kraul"><span>Kraulen</span></label><label id="p-huepf"><input type="checkbox" switch class="sw" id="sw-huepf"><span>Hüpfen</span></label></div>
+  <div class="mehr">
+    <label id="b-med"><input type="checkbox" switch class="sw" id="sw-med"><span>Medizin</span></label>
+    <label id="g-wecken"><input type="checkbox" switch class="sw" id="sw-wecken"><span>Schlafmützen wecken</span></label>
+    <label id="b-scher"><input type="checkbox" switch class="sw" id="sw-scher"><span>Scheren</span></label>
+    <label id="b-wecker"><input type="checkbox" switch class="sw" id="sw-wecker"><span>Böp-Wecker</span></label>
+    <label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Hüte</span></label>
+    <label id="b-ton"><input type="checkbox" switch class="sw" id="sw-ton"><span>Ton an</span></label>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// Haptik: iPhone über Schalter-Feld, Android über vibrate
+function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
+function buzz(n=1,gap=120){
+  if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_,i)=>i%2?gap:40));return}
+  for(let i=1;i<n;i++)setTimeout(pulse,i*gap);
+}
+function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
+// Das Böp-böp-böp: kurze Rechteck-Töne. Browser spielen Ton erst nach dem ersten Fingertipp.
+let ac=null;
+function audio(){try{if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){}return ac}
+function boep(n=3,gap=.17){
+  if(!st.ton)return;const a=audio();if(!a)return;
+  for(let i=0;i<n;i++){const o=a.createOscillator(),g=a.createGain(),t=a.currentTime+i*gap;
+    o.type='square';o.frequency.setValueAtTime(i%2?700:930,t);o.frequency.linearRampToValueAtTime(i%2?640:860,t+.09);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.07,t+.01);g.gain.linearRampToValueAtTime(0,t+.1);
+    o.connect(g).connect(a.destination);o.start(t);o.stop(t+.12)}
+}
+
+// Werte
+const clamp=v=>Math.max(0,Math.min(100,v));
+const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Sauber'};
+const DEF={satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,ei:true,taps:0,name:'',stufe:'baby',nacht:false,krank:false,krankMin:0,punkte:0,hut:'',wolle:100,bis:0,sorry:0,weckTag:'',ton:true,geb:Date.now(),t:Date.now()};
+let st={...DEF};try{st={...DEF,...JSON.parse(localStorage.getItem('schnoepa')||'{}')}}catch(e){}
+function save(){st.t=Date.now();try{localStorage.setItem('schnoepa',JSON.stringify(st))}catch(e){}}
+function say(t){$('msg').textContent=t}
+const nm=()=>st.name||'Böpi-Schnöpi';
+const heute=()=>new Date().toDateString();
+// Eingeschnappt: dreht sich weg und redet nicht mehr – bis man sich entschuldigt oder die Zeit um ist
+const sauer=()=>Date.now()<st.bis;
+function schnapp(min,txt){st.bis=Date.now()+min*60000;st.sorry=0;anim=null;buzz(2,80);say(txt);zeigNotfall();save()}
+function tick(min){
+  if(st.ei)return;
+  const z=st.schlaf;
+  st.satt=clamp(st.satt-min*(z?.3:.6));st.laune=clamp(st.laune-min*(z?.1:.5));
+  st.sauber=clamp(st.sauber-min*.3);st.energie=clamp(st.energie+min*(z?2:-.4));
+  st.wolle=clamp(st.wolle+min*1.5);
+  if(Math.random()<min/25&&st.poo<3)st.poo++;
+  st.sauber=clamp(st.sauber-st.poo*min*.5);
+  const schlecht=['satt','laune','sauber'].filter(k=>st[k]<20).length>=2;
+  if(!st.krank){st.krankMin=schlecht?st.krankMin+min:Math.max(0,st.krankMin-min);if(st.krankMin>=60){st.krank=true;say('Mir ist schlecht …')}}
+  else st.laune=clamp(st.laune-min*.5);
+  const n=isNight(new Date());
+  if(n&&!st.nacht){st.schlaf=true;say('Gute Nacht! Morgen früh wecke ich dich. Hehe.')}
+  if(!n&&st.nacht)st.schlaf=false;
+  st.nacht=n;
+  if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
+}
+tick(Math.min(1440,(Date.now()-st.t)/60000));
+function isNight(d){const h=d.getHours();return h>=21||h<7}
+function weather(d){const r=((d.getFullYear()*400+d.getMonth()*31+d.getDate())*24+d.getHours())*2654435761%1000/1000;return r<.2?'regen':'klar'}
+function stage(){const d=(Date.now()-st.geb)/864e5;return d<1?'baby':d<4?'kind':'gross'}
+const STUFE={baby:'Lamm',kind:'Jungschaf',gross:'Groß'},SCALE={baby:.6,kind:.8,gross:1};
+function render(){
+  const sg=st.ei?st.stufe:stage();if(sg!==st.stufe){st.stufe=sg;say(sg==='kind'?'Ich bin gewachsen! Böp!':'Ich bin jetzt ein großes Schaf. Und noch frecher.')}
+  const tage=Math.floor((Date.now()-st.geb)/864e5);
+  document.querySelector('#b-sleep span').textContent=st.schlaf?'Weck':'Schlaf';
+  document.querySelector('#b-ton span').textContent=st.ton?'Ton an':'Ton aus';
+  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'} · ${STUFE[st.stufe]}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('')+`<span>Wolle</span><div class="bar"><i style="width:${st.wolle}%"></i></div>`;
+  zeigNotfall();
+}
+function zeigNotfall(){$('b-sorry').hidden=!sauer();$('b-wach').hidden=!wecker;$('notfall').hidden=!sauer()&&!wecker}
+function mood(){
+  if(sauer())return'Pff.';
+  if(st.krank&&!st.schlaf)return'Mir ist schlecht … Medizin?';
+  if(st.schlaf)return'Zzz …';
+  const low=Object.keys(NAMES).filter(k=>st[k]<25);
+  return low.length?{satt:'Hunger! Klee her, aber zack!',laune:'Langweilig! Soll ich böpen?',energie:'So müde …',sauber:'Meine Wolle ist voller Kletten!'}[low[0]]:null;
+}
+
+// Zeichnen: Szene aus Pixeln, 32 × 24 Felder
+const svg=$('scene');let out='';
+const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
+const txt=(x,y,s,t,c='ink')=>out+=`<text x="${x}" y="${y}" font-size="${s}" fill="var(--${c})" font-family="var(--font)">${t}</text>`;
+const COL={U:'hand',K:'ink',D:'eye',G:'sun',R:'rot',B:'decke',I:'fluff',H:'holz',V:'klee',P:'rosa',E:'edge',W:'wut'};
+const sprite=(rows,x,y)=>rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(COL[ch])px(x+i,y+j,COL[ch])}));
+const KLEE=[".V.V.","VVVVV","VV.VV","..V.."],HEART=[".R.R.","RRRRR",".RRR.","..R.."],KOETTEL=[".K.","K.K"],WOLKE=[".WWW.","WWWWW",".WWW."];
+// Rosa Schaf von der Seite, Blick nach rechts: wolliger Körper, helles Gesicht, Schlappohr
+function schaf(x,y,o){
+  const r=["...WW.WW......",".WWWWWWWWW.E..","WWWWWWWWWWFFF.","WWWWWWWWWWFDFF","WWWWWWWWWWFFFN",".WWWWWWWWW.FF.","..WWWWWWWW....",
+    ...(o.leg?["..L..L.L..L...","..L..L.L..L..."]:["...LL...LL....","...LL...LL...."])].map(s=>[...s]);
+  if(o.zu)r[3][11]='Q';
+  if(o.mund)r[4][13]='D',r[5][12]='D';
+  if(o.zunge)r[5][13]='Z';
+  if(o.boese)r[2][11]='N',r[2][12]='N';
+  if(st.wolle<40){r[0]=[...'..............'];r.forEach((row,j)=>row.forEach((c,i)=>{if(c==='W')row[i]=(i===0||j===6&&i===2)?'.':'X'}))}
+  const sc=o.sc||SCALE[st.stufe]||1,fl=o.flip?-1:1,s=sc*(o.sy||1);
+  const C={W:st.krank?'blass':'wolle',X:'haut',F:'gesicht',E:'bein',D:'eye',N:'nase',L:'bein',Q:'gesicht',Z:'rosa'};
+  const voll=(i,j)=>r[j]&&r[j][i]&&r[j][i]!=='.';
+  out+=`<g transform="translate(${x+7} ${y+10}) rotate(${(o.rot||0)*fl}) scale(${fl*sc} ${s}) translate(-7 -9)">`;
+  for(let j=-1;j<=r.length;j++)for(let i=-1;i<=14;i++)if(!voll(i,j)&&(voll(i-1,j)||voll(i+1,j)||voll(i,j-1)||voll(i,j+1)))px(i,j,'edge');
+  r.forEach((row,j)=>row.forEach((c,i)=>{if(c==='.')return;px(i,j,C[c]);if(c==='Q')px(i,j+.4,'eye',1,.3);if(c==='W'&&(i+j)%3===0&&!st.krank)px(i+.2,j+.2,'wolle2',.5,.5)}));
+  if(st.hut){const h=HATS[st.hut];sprite(h.rows,h.x,h.y)}
+  out+='</g>';
+}
+const kopf=(x,y,o={})=>{const sc=o.sc||SCALE[st.stufe]||1,fl=o.flip?-1:1;return[x+7+(12-7)*sc*fl,y+10-7*sc]};
+let anim=null,cx=6,dir=1,f=0,game=null,wecker=null,streichel=[];
+// Hüte: mit Spielpunkten freispielen
+const HATS={brille:{p:10,n:'Sonnenbrille',x:10,y:3,rows:["KKKK"]},muetze:{p:25,n:'Schlafmütze',x:9,y:-2,rows:["....I","BBBB.","BBBBB"]},
+  krone:{p:40,n:'Krone',x:9,y:-1,rows:["G.G.G","GGGGG"]},blume:{p:60,n:'Gänseblümchen',x:12,y:-1,rows:[".I.","IGI",".I."]}};
+const frei=pt=>Object.keys(HATS).filter(k=>pt>=HATS[k].p);
+function nextHat(){
+  const fr=frei(st.punkte);
+  if(!fr.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zur ${HATS[k].n}!`);return}
+  const liste=['',...fr];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
+  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Hut.');save();
+}
+const EI='Erst muss das Schaf aus dem Wollknäuel. Tipp drauf!';
+function canPlay(){
+  if(st.ei){say(EI);return false}
+  if(sauer()){say('Pff. Ich spiel nicht mit dir.');return false}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return false}
+  if(st.krank){say('Mir geht es nicht gut zum Spielen …');return false}
+  return true}
+
+// Bett mit Schlafmütze (für Spiel und Szene)
+function bett(o){
+  px(18,15,'holz',1,6);px(31,17,'holz',1,4);px(18,18.5,'holz',14,2);
+  px(19,16.6,'fluff',3,1.8);
+  if(o.wach){px(20.2,13.2,'hand',2,2);px(20,12.8,'holz',2.4,.7);px(20.8,14,'eye',.3,.3);px(21.5,14,'eye',.3,.3);px(20.4,16,'hand',.5,1.4);px(22,16,'hand',.5,1.4);txt(23,13,2.4,'!!','rot');px(20.5,15.2,'decke',2,1)}
+  else{px(20,16.2,'hand',2,1.8);px(19.8,15.9,'holz',2.4,.6);txt(22.5,15-(f%10)*.2,1.8,'z')}
+  px(21.5,17,'decke',10,1.6);
+  if(o.kissen)px(19.4,15.6,'fluff',3.4,1.4);
+}
+// Minispiel: Schlafmützen wecken. Schnell tippen, damit das Schaf böpt, bis die Schlafmütze hochschreckt.
+const LIMIT=200;
+function startGame(){
+  if(game||!canPlay())return;anim=null;$('spielwahl').hidden=true;
+  game={t:0,score:0,meter:0,wach:0,kissen:0,j:0};
+  say('Schnell tippen! Böp-böp-böp, bis die Schlafmütze aufwacht!');
+}
+function gameTap(){
+  const g=game;if(g.wach)return;
+  g.meter=Math.min(100,g.meter+(g.kissen?8:13));g.j=4;boep(1);tock();
+}
+function endGame(){
+  const g=game;game=null;const pts=g.score;
+  const vorher=frei(st.punkte).length;st.punkte+=pts*2;const neu=frei(st.punkte);
+  st.energie=clamp(st.energie-10);
+  if(pts>=3){st.laune=clamp(st.laune+15+pts*3);buzz(3);boep(5,.12);say(`Hehe! ${pts} Schlafmützen geweckt!`+(neu.length>vorher?` Neu: ${HATS[neu[neu.length-1]].n}!`:''))}
+  else{st.laune=clamp(st.laune+5);schnapp(2,`Pff! Nur ${pts} wach. Die sind ja alle taub!`)}
+  render();save();
+}
+function drawGame(){
+  const g=game;g.t++;
+  if(g.j>0)g.j--;if(g.kissen>0)g.kissen--;
+  if(g.wach>0){g.wach--;if(!g.wach)g.meter=0}
+  else{
+    g.meter=Math.max(0,g.meter-.55);
+    if(g.meter>45&&!g.kissen&&!g.snoozt&&Math.random()<.03){g.meter-=25;g.kissen=18;g.snoozt=1;say('Schnarch … *Kissen über den Kopf*')}
+    if(g.meter>=98){g.wach=14;g.snoozt=0;g.score++;buzz(2);say(`AAAH! Wach! ${g.score}`)}
+  }
+  bett({wach:g.wach>0,kissen:g.kissen>0});
+  schaf(2,11-(g.j>2?2:0),{sc:.8,mund:g.j>0,leg:g.j>0,boese:g.wach>0?false:g.t%60<20});
+  if(g.j>0)txt(8,7-g.j*.3,2.6,'BÖP','rot');
+  if(g.wach>0)sprite(HEART,10,4);
+  px(1,1,'ink',12,1.6);px(1.25,1.25,'sky',11.5,1.1);px(1.25,1.25,'rot',11.5*g.meter/100,1.1);
+  txt(15,2.6,2.2,`${g.score}`);txt(25,2.6,2.2,`${Math.ceil((LIMIT-g.t)*.15)}s`);
+  if(g.t>=LIMIT)endGame();
+}
+
+// Start: rosa Wollknäuel. Mit jedem Tippen guckt das Lamm ein Stück weiter heraus.
+function drawKnaeuel(){
+  const w=anim?.type==='wobble'?(anim.t%2?.4:-.4):0;
+  out+=`<circle cx="${16+w}" cy="17" r="4.5" fill="var(--wolle)" stroke="var(--edge)" stroke-width=".3"/><path d="M${12.5+w} 15 Q${16+w} 13 ${19.5+w} 16 M${12+w} 18 Q${16+w} 15.5 ${20.4+w} 18.6 M${13.5+w} 20.4 Q${17+w} 18 ${19.8+w} 20" stroke="var(--wolle2)" stroke-width=".5" fill="none"/><path d="M${20+w} 20 Q24 21.6 27 21.3" stroke="var(--wolle)" stroke-width=".6" fill="none"/>`;
+  if(st.taps>=1)px(17.6+w,12.2,'bein',1.4,.8);
+  if(st.taps>=2){px(15+w,16,'gesicht',3,2.4);px(16.2+w,16.6,'eye',.7,.7)}
+  if(st.taps>=3)px(17.4+w,17.6,'nase',.6,.5);
+  if(st.taps>=4)txt(19+w,13,2,'böp?','edge');
+}
+// Hintergrund: Wiese mit Zaun und Blumen
+function backdrop(nacht,wt){
+  if(nacht){out+=`<rect width="32" height="24" fill="var(--night)"/>`;
+    [[3,3],[8,2],[13,4],[17,1.5],[21,3],[24,5]].forEach(([x,y],k)=>{if((f>>3)%7!==k)px(x,y,'moon',.3,.3)});
+    out+=`<circle cx="27" cy="4" r="1.8" fill="var(--moon)"/>`}
+  else{if(wt!=='klar')out+=`<rect width="32" height="24" fill="var(--grau)"/>`;else out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+    const wx=((f*.04+10)%46)-9;out+=`<g fill="var(--cloud)"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`}
+  out+=`<path d="M-2 21 Q8 15 16 18 T34 17 L34 21Z" fill="var(--wiese2)" opacity=".7"/>`;
+  for(let x=1;x<32;x+=5)px(x,15.5,'zaun',.6,5.5);px(0,16.5,'zaun',32,.5);px(0,18.6,'zaun',32,.5);
+  px(0,21,'wiese',32,3);px(0,21,'wiese2',32,.25);
+  if(!game)for(const [bx,c] of [[4,'fluff'],[13,'sun'],[24,'fluff'],[29,'rosa']])px(bx,20.4,c,.6,.6);
+}
+function start(type,len){anim={type,t:0,len}}
+// Böp-Wecker: morgens ab 7 Uhr böpt das Schaf so lange, bis man „Ich bin wach!“ drückt
+function weckerAn(test){wecker={t:0,test};st.schlaf=false;anim=null;$('spielwahl').hidden=true;zeigNotfall();say('BÖP! BÖP! BÖP! Aufstehen!')}
+function weckerAus(){
+  if(!wecker)return;const test=wecker.test;wecker=null;if(!test)st.weckTag=heute();
+  st.laune=clamp(st.laune+10);zeigNotfall();start('pet',14);say(test?'Hehe. So klingt das jeden Morgen.':'Hehe. Guten Morgen, Schlafmütze!');render();save();
+}
+function frame(){
+  out='';f++;
+  const A=anim,t=A?A.t:0,z=st.schlaf,boese=sauer();
+  let y=11,o={leg:0,zu:z||f%53<2,flip:dir<0},after=()=>{};
+  const jetzt=new Date(),nacht=isNight(jetzt),wt=weather(jetzt),h=jetzt.getHours();
+  backdrop(nacht,wt);
+  if(st.ei){drawKnaeuel();if(anim&&++anim.t>=anim.len)anim=null;svg.innerHTML=out;return}
+  if(!st.ei&&!game&&!wecker&&h>=7&&h<10&&st.weckTag!==heute()&&!boese)weckerAn(false);
+  if(!game)for(let i=0;i<st.poo;i++)sprite(KOETTEL,1+i*4,21.8);
+  if(game){drawGame();svg.innerHTML=out;return}
+  const sc=SCALE[st.stufe]||1,maxX=30-14*sc;
+  if(wecker){ // springt auf und ab und böpt direkt in den Bildschirm
+    wecker.t++;const wt2=wecker.t%14;o.flip=false;o.mund=wt2<6;o.zu=false;o.boese=false;y=wt2<6?9.5:11;o.leg=wt2<6;
+    if(wt2===0){boep(3);buzz(3,140)}
+    if(wt2<6){txt(2+(wecker.t%28<14?0:14),6,3,'BÖP!','rot');if(wecker.t%28<14)out+=`<rect width="32" height="24" fill="var(--sun)" opacity=".12"/>`}
+    if(wecker.t%56===0)say(['BÖP! BÖP! BÖP! Aufstehen!','Böp-böp-böp! Ich hör erst auf, wenn du wach bist!','BÖÖÖP! Sonne ist da!','Böp. Böp. Böp. Ich kann das den ganzen Tag.'][(wecker.t/56)%4]);
+    schaf(cx,y,o);svg.innerHTML=out;return;
+  }
+  if(boese&&!A){ // eingeschnappt: Rücken zur Kamera, dunkles Wölkchen
+    o.flip=true;o.boese=true;o.zu=f%30<15;if(cx<maxX)cx=Math.min(maxX,cx+.5);
+    after=()=>{const [hx,hy]=kopf(cx,y,o);sprite(WOLKE,hx-2,hy-6+Math.sin(f*.2)*.4);if(f%40<20)txt(hx-8,hy-4,2,'Pff!')};
+  }
+  if(!A&&!z&&!boese){
+    if(f%3===0){cx+=dir*.8;if(cx<0||cx>maxX){dir*=-1;cx=Math.max(0,Math.min(maxX,cx))}}
+    o.leg=(f>>1)&1;o.flip=dir<0;
+    if(f%50===0&&Math.random()<.7){
+      const k=['boep','zunge','rammen','grasen','huepf','laptop'][Math.floor(Math.random()*6)];
+      start(k,k==='rammen'?24:30);
+      say({boep:`${nm()}: Böp-böp-böp! Hehe.`,zunge:'Bäääh! *Zunge raus*',rammen:`${nm()} nimmt Anlauf … RUMMS!`,grasen:`${nm()} mampft Gras.`,huepf:'Hops! Hops! Hops!',laptop:`${nm()} arbeitet am Laptop … sagt sie.`}[k])}
+  }
+  switch(A?.type){
+    case'eat':{const [hx]=kopf(cx,y,{...o,flip:false});o.flip=false;
+      if(t<8)sprite(KLEE,hx-1,t*1.6-3);else{const n=Math.min(4,Math.floor((t-8)/2));sprite(KLEE.slice(n),hx-1,17+n);o.mund=t%2===0;o.rot=t%2?8:12}
+      if(boese&&t===A.len-1)say('*mampf* … Ich bin trotzdem beleidigt.');
+      break}
+    case'boep':{o.flip=false;o.zu=false;o.mund=t%10<5;if(t%10===0){boep(3);tock()}const [hx,hy]=kopf(cx,y,o);if(t%10<5)txt(hx+1,hy-1,2.2,'böp','rot');break}
+    case'zunge':{o.flip=false;o.zunge=t>4&&t<26;o.zu=t>4&&t<26&&t%6<3;break}
+    case'rammen':{ // Kopf runter, losrennen, gegen den Bildschirmrand
+      o.flip=false;o.rot=12;o.leg=f&1;if(t<14)cx=Math.min(maxX+2,cx+1.1);
+      if(t>=14){if(t===14){buzz(2,60);tock()}after=()=>{const s=(t%2?.6:-.6);out+=`<rect width="32" height="24" fill="var(--ink)" opacity=".06"/>`;txt(20+s,9,2.6,'RUMMS','rot')}}
+      break}
+    case'grasen':{o.rot=22;o.mund=t%4<2;o.zu=t%12<6;break}
+    case'huepf':{const p=(t%10)/10;y=11-Math.sin(Math.PI*p)*3;o.leg=1;o.rot=Math.sin(Math.PI*p)*-8;if(t%10===0)tock();break}
+    case'laptop':{o.flip=false;o.rot=f%2?-6:-3;if(f%2)tock();const [hx]=kopf(cx,y,o);
+      after=()=>{px(hx-1,16.6,'ink',6,3.4);px(hx+1,17.8,'sky',1,.8);px(hx-2,20,'ink',8,.7)};
+      if(t===A.len-1)say('Fertig. Hab nur Böp-Videos geguckt.');break}
+    case'clean':{o.zu=true;const s=SCALE[st.stufe]||1,bx=cx+7+Math.sin(t*.8)*4*s,by=y+10-8*s;
+      after=()=>{px(bx-1,by-1.4,'holz',2.4,.8);px(bx-1,by-.6,'ink',2.4,.3);for(let k=0;k<3;k++)px(cx+3+k*3,y+2-((t*.4+k*2)%4),'sun',.4,.4)};
+      if(t===A.len-1){o.zu=false;say('Flauschig! Fast so schön wie ich frech bin.')}break}
+    case'scher':{o.zu=t<20;const s=SCALE[st.stufe]||1;
+      after=()=>{for(let k=0;k<6;k++)px(cx+2+((k*3.7+t)%10)*s,y+2+((k*2.3+t*.6)%8)*s,'wolle',.7,.7);if(t<20)txt(cx+3,y-1,2,'schnipp')};
+      break}
+    case'med':{const [hx,hy]=kopf(cx,y,o);if(t<8)sprite(["RII"],hx-1,2+t*.8);else{o.zu=false;for(let k=0;k<4;k++)px(hx-6+k*3,hy-(t-8)*.5-(k%2),'sun',.5,.5)}break}
+    case'kraul':{o.zu=true;const s=SCALE[st.stufe]||1,rx=cx+7+(Math.sin(t*.5)*3.5)*s*(o.flip?-1:1),ry=y+10-9.4*s;
+      after=()=>{sprite(["UUU.","UUUU","UUU."],rx-2,ry-2);const [hx,hy]=kopf(cx,y,o);if(t>6&&!boese)sprite(HEART,hx-2,hy-2-(t-6)*.35)};
+      if(t===A.len-1){o.zu=false;if(!boese)say('Mähhh … na gut, das ist schön.')}break}
+    case'pet':{o.zu=t<8;const [hx,hy]=kopf(cx,y,o);after=()=>sprite(HEART,hx-2,hy-2-t*.6);break}
+  }
+  if(st.krank&&A?.type!=='med')after=(a=>()=>{a();const [hx,hy]=kopf(cx,y,o);sprite([".EEE.","E.E.E","EEEEE",".E.E."],hx-2,hy-6+Math.sin(f*.3)*.6)})(after);
+  if(z){o.sy=.7;o.leg=0;const [hx,hy]=kopf(cx,y,o);for(let k=0;k<2;k++)txt(hx+1+k*2,hy-((f*.3+k*3)%6),3-k,'z',nacht?'moon':'ink')}
+  schaf(cx,y,o);after();
+  if(wt!=='klar'&&!nacht)for(let k=0;k<14;k++)px(((k*7.3)+Math.sin(f*.05+k))%32,(k*5.1+f*.6)%22,'decke',.25,.8);
+  if(A&&++A.t>=A.len)anim=null;
+  svg.innerHTML=out;
+}
+setInterval(frame,150);
+
+// Handlungen
+function act(ch,txt_,n,type,len,trotzig){
+  if(st.ei){say(EI);return}
+  if(wecker){say('BÖP! Erst „Ich bin wach!“ drücken!');return}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
+  if(sauer()&&!trotzig){buzz(1);say(['Pff.','Ich rede nicht mit dir.','*dreht sich weg*','Sag erst Entschuldigung!'][Math.floor(Math.random()*4)]);return}
+  for(const k in ch)st[k]=clamp(st[k]+ch[k]);
+  buzz(n);start(type,len);say(txt_);render();save();
+}
+function sorry(){
+  st.sorry++;tock();
+  if(st.sorry<3){say(['Hmpf.','Und? Meinst du das ernst?'][st.sorry-1]);save();return}
+  st.bis=0;st.sorry=0;st.laune=clamp(st.laune+10);start('pet',14);boep(2);say('Na gut. Böp. Aber nur, weil du es bist.');render();save();
+}
+$('pet').onclick=()=>{
+  audio();
+  if(game)return gameTap();
+  if(wecker)return say('BÖP! Streicheln hilft nicht. „Ich bin wach!“ drücken!');
+  if(!st.ei){
+    if(sauer())return sorry();
+    const jetzt=Date.now();streichel=streichel.filter(t=>jetzt-t<4000);streichel.push(jetzt);
+    if(streichel.length>=6&&!st.schlaf){streichel=[];return schnapp(1,'Jetzt reicht’s mit dem Gestreichel! Pff!')}
+    return act({laune:5},'Mähh! ♥',1,'pet',12);
+  }
+  st.taps++;start('wobble',6);
+  if(st.taps<5){say(['Das Wollknäuel bewegt sich …','Ein Ohr!','Ein Auge! Es guckt frech.','Eine Nase!'][st.taps-1]);save();return}
+  st.ei=false;st.geb=Date.now();st.weckTag=heute();buzz(3);boep(3);start('pet',12);say('BÖP! Da bin ich! Wie heiße ich?');$('nameform').hidden=false;render();save();
+};
+function showName(){$('name').textContent=nm().toUpperCase()}
+$('nameform').onsubmit=e=>{e.preventDefault();st.name=($('nm').value||'').trim().slice(0,14)||'Böpi-Schnöpi';$('nameform').hidden=true;showName();say(`Ich heiße ${st.name}. Böp!`);save()};
+$('b-feed').onclick=()=>{if(!st.ei&&!st.schlaf&&st.poo<3&&Math.random()<.4)st.poo++;act({satt:25},sauer()?'Pff. … Klee nehm ich trotzdem.':'Mampf! Frischer Klee.',2,'eat',18,true)};
+$('b-play').onclick=()=>{if(st.ei||st.schlaf||sauer()||wecker)return act({},'',1);$('spielwahl').hidden=!$('spielwahl').hidden;if(!$('spielwahl').hidden)say('Kraulen oder hüpfen?')};
+$('p-kraul').onclick=()=>{$('spielwahl').hidden=true;act({laune:15,sauber:2},`${nm()} lässt sich kraulen …`,2,'kraul',28)};
+$('p-huepf').onclick=()=>{$('spielwahl').hidden=true;st.krank?(buzz(1),say('Mir geht es nicht gut zum Hüpfen …')):act({laune:20,energie:-10,satt:-5},'Hops! Hops! Wer zuerst müde wird, hat verloren!',3,'huepf',30)};
+$('b-sleep').onclick=()=>{
+  if(st.ei)return say(EI);if(wecker)return say('Schlafen? Jetzt? BÖP!');
+  if(st.schlaf){st.schlaf=false;anim=null;render();return schnapp(3,'Du hast mich geweckt!! Andere wecken: ja. Selbst geweckt werden: NIE. Pff!')}
+  if(sauer())return act({},'',1);
+  st.schlaf=true;anim=null;buzz(1);say('Zzz …');render();save()};
+$('b-clean').onclick=()=>{if(!st.schlaf&&!st.ei&&!sauer())st.poo=0;act({sauber:40,laune:5},'Bürsten! Schön flauschig.',2,'clean',22)};
+$('b-scher').onclick=()=>{
+  if(st.ei)return say(EI);if(st.schlaf||wecker)return act({},'',1);
+  if(sauer())return say('Pff. Finger weg von meiner Wolle!');
+  if(st.wolle<40){buzz(1);return say('Da ist doch gar keine Wolle mehr dran!')}
+  st.wolle=0;start('scher',26);buzz(2);render();save();
+  setTimeout(()=>schnapp(3,'Meine schöne Wolle!! Ich bin nackig! Pff!'),3900);
+};
+$('b-med').onclick=()=>{
+  if(st.ei||st.schlaf)return act({},'',1);
+  if(!st.krank){buzz(1);say('Ich bin doch gesund! Bäh!');return}
+  st.krank=false;st.krankMin=0;act({laune:10},'Bäh! … Aber jetzt geht es mir besser!',2,'med',16,true);
+};
+$('b-hut').onclick=()=>{if(st.ei)return say(EI);if(sauer())return say('Pff. Kein Hut der Welt hilft jetzt.');nextHat()};
+$('b-ton').onclick=()=>{st.ton=!st.ton;audio();if(st.ton)boep(1);render();save()};
+$('b-wecker').onclick=()=>{audio();if(st.ei)return say(EI);if(wecker)return;if(sauer())return say('Pff. Nicht mal böpen will ich jetzt.');weckerAn(true)};
+$('b-wach').onclick=()=>{audio();weckerAus()};
+$('b-sorry').onclick=()=>{audio();sorry()};
+$('g-wecken').onclick=()=>{audio();startGame()};
+// Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
+for(const id of ['pet','b-feed','b-play','p-kraul','p-huepf','b-sleep','b-clean','b-scher','b-med','g-wecken','b-wecker','b-wach','b-sorry','b-hut','b-ton']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
+setInterval(()=>{tick(.5);if(!game&&!wecker){const m=mood();if(m)say(m)}render();save()},30000);
+// Eingeschnapptsein endet von selbst
+setInterval(()=>{if(st.bis&&!sauer()){st.bis=0;say('Na gut, ich rede wieder mit dir.');render();save()}},5000);
+showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
+render();save();frame();{const m=mood();if(st.ei)say('Ein rosa Wollknäuel! Tipp es an …');else if(m&&!wecker)say(m)}
+</script>
+</body></html>
