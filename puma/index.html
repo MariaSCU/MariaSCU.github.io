@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Puma">
+<meta name="theme-color" content="#b0763f">
+<style>*{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}</style>
+<title>Puma-Gotchi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
+<style>
+/* Layout wie Koala-Gotchi: Fenster mit Puma, darunter Werte und runde Tasten */
+:root{--bg:#f6f3ee;--fg:#272421;--sky:#dfe9ef;--sun:#f2c14e;--cloud:#ffffff;--ink:#33302c;--eye:#1d1d1f;--acc:#b0763f;--puma:#c9935c;--belly:#f1e0c6;--nose:#9c5a5a;--tip:#3b2c22;--spot:#9a6a3e;--edge:#6e5440;--berg:#a9b6c0;--berg2:#c8d2d9;--schnee:#ffffff;--ground:#9a8a5a;--fels:#8e8780;--tanne:#3f5f48;--stamm:#6b4a33;--deer:#94603a;--antler:#dcc9a0;--fluff:#f7f3ea;--bone:#efe8d8;--meat:#c4574a;--rain:#5c8fb8;--night:#131a26;--moon:#efe9cf;--grau:#cdd3d7;--blass:#e9dfbf;--rot:#d9534f;--rosa:#f2a7b4;--haut:#f1c9a5;--hut:#7a5230;--font:"Silkscreen",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141311;--fg:#e8e4de;--sky:#1c2730;--sun:#e9e4c9;--cloud:#323d45;--ink:#dcd6ce;--berg:#3a4650;--berg2:#4a5762;--ground:#5e5436;--grau:#2a3238;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141311;--fg:#e8e4de;--sky:#1c2730;--sun:#e9e4c9;--cloud:#323d45;--ink:#dcd6ce;--berg:#3a4650;--berg2:#4a5762;--ground:#5e5436;--grau:#2a3238;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);display:grid;place-items:center;padding-inline:16px}
+.egg{width:min(340px,100%);display:grid;gap:14px;justify-items:center;padding-block:24px}
+h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
+.lcd{width:100%;background:var(--sky);border-radius:18px;overflow:hidden}
+.tap{position:relative;display:block;cursor:pointer;touch-action:none;-webkit-touch-callout:none}
+#scene{width:100%;display:block;shape-rendering:crispEdges}
+.sw{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.stats{width:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:10px;align-items:center}
+.bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;max-width:100%;background:var(--acc);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
+.mehr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+.mehr label{position:relative;font-size:10px;padding:9px 14px;border-radius:999px;border:2px solid var(--acc);cursor:pointer;user-select:none;-webkit-user-select:none}
+.btns label:active,.mehr label:active{transform:scale(.93)}
+.btns label:has(input:focus-visible),.mehr label:has(input:focus-visible){outline:3px solid var(--ink)}
+#msg{font-size:11px;min-height:1.4em;text-align:center}
+.form{display:flex;gap:8px;width:100%}
+.form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
+.form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--acc);color:#fff}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="egg">
+  <h1 id="name">PUMA</h1>
+  <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" id="sw-pet" aria-label="Puma streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
+  <div id="msg">Hallo!</div>
+  <form id="nameform" class="form" hidden><input id="nm" maxlength="12" placeholder="Wie soll ich heißen?" autocomplete="off" aria-label="Name"><button>Fertig</button></form>
+  <div class="stats" id="stats"></div>
+  <div class="btns">
+    <label id="b-feed"><input type="checkbox" switch class="sw" id="sw-feed"><span>Futter</span></label><label id="b-play"><input type="checkbox" switch class="sw" id="sw-play"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw" id="sw-sleep"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw" id="sw-clean"><span>Putzen</span></label>
+  </div>
+  <div class="mehr" id="spielwahl" hidden><label id="p-kraul"><input type="checkbox" switch class="sw" id="sw-kraul"><span>Kraulen</span></label><label id="p-zapfen"><input type="checkbox" switch class="sw" id="sw-zapfen"><span>Tannenzapfen</span></label></div>
+  <div class="mehr">
+    <label id="b-med"><input type="checkbox" switch class="sw" id="sw-med"><span>Medizin</span></label>
+    <label id="g-jagd"><input type="checkbox" switch class="sw" id="sw-jagd"><span>Hirschjagd</span></label><label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Hüte</span></label>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// Haptik: iPhone über Schalter-Feld, Android über vibrate
+function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
+function buzz(n=1,gap=120){
+  if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_,i)=>i%2?gap:40));return}
+  for(let i=1;i<n;i++)setTimeout(pulse,i*gap);
+}
+function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
+// Schnurren: viele kleine Ticks hintereinander
+function purr(n=10){if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_,i)=>i%2?35:18));return}for(let i=1;i<n;i++)setTimeout(pulse,i*70)}
+
+// Werte
+const clamp=v=>Math.max(0,Math.min(100,v));
+const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Sauber'};
+const DEF={satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,ei:true,taps:0,name:'',stufe:'baby',nacht:false,krank:false,krankMin:0,punkte:0,hut:'',geb:Date.now(),t:Date.now()};
+let st={...DEF};try{st={...DEF,...JSON.parse(localStorage.getItem('puma')||'{}')}}catch(e){}
+function save(){st.t=Date.now();try{localStorage.setItem('puma',JSON.stringify(st))}catch(e){}}
+function say(t){$('msg').textContent=t}
+const nm=()=>st.name||'Puma';
+// Pro Minute: Werte sinken (im Schlaf steigt Energie). Abwesenheit wird nachgeholt, max. 24 h.
+function tick(min){
+  if(st.ei)return;
+  const z=st.schlaf;
+  st.satt=clamp(st.satt-min*(z?.3:.6));st.laune=clamp(st.laune-min*(z?.1:.5));
+  st.sauber=clamp(st.sauber-min*.3);st.energie=clamp(st.energie+min*(z?2:-.4));
+  if(Math.random()<min/25&&st.poo<3)st.poo++;
+  st.sauber=clamp(st.sauber-st.poo*min*.5);
+  // Krank erst nach einer Stunde Vernachlässigung; der Puma stirbt nie
+  const schlecht=['satt','laune','sauber'].filter(k=>st[k]<20).length>=2;
+  if(!st.krank){st.krankMin=schlecht?st.krankMin+min:Math.max(0,st.krankMin-min);if(st.krankMin>=60){st.krank=true;say('Mir ist schlecht …')}}
+  else st.laune=clamp(st.laune-min*.5);
+  const n=isNight(new Date());
+  if(n&&!st.nacht){st.schlaf=true;say('Gute Nacht!')}
+  if(!n&&st.nacht){st.schlaf=false;say('Guten Morgen!')}
+  st.nacht=n;
+  if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
+}
+tick(Math.min(1440,(Date.now()-st.t)/60000));
+function isNight(d){const h=d.getHours();return h>=21||h<7}
+// Bergwetter: pro Stunde fest ausgewürfelt, im Winter Schnee statt Regen
+function weather(d){
+  const m=d.getMonth(),r=((d.getFullYear()*400+m*31+d.getDate())*24+d.getHours())*2654435761%1000/1000;
+  return r<.22?(m>9||m<3?'schnee':'regen'):'klar';
+}
+function stage(){const d=(Date.now()-st.geb)/864e5;return d<1?'baby':d<4?'kind':'gross'}
+const STUFE={baby:'Junges',kind:'Jungpuma',gross:'Groß'},SCALE={baby:.6,kind:.8,gross:1};
+function render(){
+  const sg=st.ei?st.stufe:stage();if(sg!==st.stufe){st.stufe=sg;say(sg==='kind'?'Ich bin gewachsen!':'Ich bin jetzt ein großer Puma! Meine Flecken sind weg.')}
+  const tage=Math.floor((Date.now()-st.geb)/864e5);
+  document.querySelector('#b-sleep span').textContent=st.schlaf?'Weck':'Schlaf';
+  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'} · ${STUFE[st.stufe]}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('');
+}
+function mood(){
+  if(st.krank&&!st.schlaf)return'Mir ist schlecht … Medizin?';
+  if(st.schlaf)return'Zzz …';
+  const low=Object.keys(NAMES).filter(k=>st[k]<25);
+  return low.length?{satt:'Ich hab Hunger auf Hirsch!',laune:'Mir ist langweilig …',energie:'So müde …',sauber:'Mein Fell ist ganz zerzaust!'}[low[0]]:null;
+}
+
+// Zeichnen: Szene aus Pixeln, 32 × 24 Felder
+const svg=$('scene');let out='';
+const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
+const COL={U:'haut',K:'ink',D:'eye',G:'sun',R:'rot',H:'hut',A:'antler',Y:'deer',I:'fluff',O:'bone',M:'meat',E:'edge',P:'rosa'};
+const flipRows=rows=>rows.map(r=>[...r].reverse().join(''));
+const sprite=(rows,x,y,flip)=>(flip?flipRows(rows):rows).forEach((r,j)=>[...r].forEach((ch,i)=>{if(COL[ch])px(x+i,y+j,COL[ch])}));
+const KEULE=["MMM...","MMMOOO","MMM..O"],KNOCHEN=["O...O","OOOOO","O...O"],HEART=[".R.R.","RRRRR",".RRR.","..R.."],ZAPFEN=[".H.","HHH","HHH",".H."];
+// Hirsch von der Seite, Blick nach rechts; beim Grasen ist der Kopf unten
+const HKOPF=["......A.A.",".......AA.","......YYYY","......YYD."],HLEIB=["IYYYYYYY..","YYYYYYYY.."];
+function deer(x,y,o){
+  const fl=o.flip,g=o.graze?2:0,legs=o.leg?["Y.Y...Y.Y."]:[".Y.Y...YY."];
+  sprite(HKOPF,x+(fl?-g*.5:g*.5),y+g,fl);sprite(HLEIB,x,y+4,fl);sprite(legs,x,y+6,fl);
+  if(o.alarm)px(x+(fl?1:8),y-1.6,'rot',.5,.9),px(x+(fl?1:8),y-.4,'rot',.5,.4);
+}
+// Puma von der Seite: lange Rute mit dunkler Spitze, runde Ohren, helle Schnauze.
+// Junge haben dunkle Flecken.
+function puma(x,y,o){
+  const r=["..........T.T...","K.........WWWW..","W.........WDWWW.","W.WWWWWWWWWWWCCN","WWWWWWWWWWWWWCC.",".WWWWWWWWWWWW...",".WBBBBBBBBBWW...",
+    ...(o.leg?[".W.W......W.W...",".W.W......W.W..."]:["..WW.......WW...","..WW.......WW..."])].map(s=>[...s]);
+  if(o.tail){r[1][0]='.';r[1][1]='K';r[2][0]='.';r[2][1]='W'}
+  if(o.zu)r[2][11]='L';else if(o.wink)r[2][11]='L';
+  if(o.mampf)r[4][14]='D';
+  if(o.lick)r[4][15]='Z';
+  if(st.stufe!=='gross')for(const [j,i] of [[3,5],[4,8],[5,4],[3,10],[5,9],[4,3]])if(r[j][i]==='W')r[j][i]='S';
+  const sc=o.sc||SCALE[st.stufe]||1,fl=o.flip?-1:1,s=sc*(o.sy||1),nacht=isNight(new Date());
+  const C={W:st.krank?'blass':'puma',B:'belly',C:'belly',N:'nose',D:nacht&&!st.schlaf?'sun':'eye',T:'tip',K:'tip',S:'spot',Z:'rosa',L:st.krank?'blass':'puma'};
+  const voll=(i,j)=>r[j]&&r[j][i]&&r[j][i]!=='.';
+  out+=`<g transform="translate(${x+8} ${y+10}) rotate(${(o.rot||0)*fl}) scale(${fl*sc} ${s}) translate(-8 -9)">`;
+  for(let j=-1;j<=r.length;j++)for(let i=-1;i<=16;i++)if(!voll(i,j)&&(voll(i-1,j)||voll(i+1,j)||voll(i,j-1)||voll(i,j+1)))px(i,j,'edge');
+  r.forEach((row,j)=>row.forEach((c,i)=>{if(c==='.')return;px(i,j,C[c]);if(c==='L')px(i,j+.4,'eye',1,.3)}));
+  if(st.hut){const h=HATS[st.hut];sprite(h.rows,h.x,h.y)}
+  out+='</g>';
+  if(o.wink&&!o.zu){const hx=x+8+(11.6-8)*sc*fl,hy=y+10+(2.2-9)*s;px(hx,hy-1,'sun',.5,.5);px(hx+.9*fl,hy-1.8,'sun',.35,.35)}
+}
+// Kopfposition des Pumas (für Herzen, Noten, Futter)
+const kopf=(x,y,o={})=>{const sc=o.sc||SCALE[st.stufe]||1,fl=o.flip?-1:1;return[x+8+(12.5-8)*sc*fl,y+10-7*sc]};
+let anim=null,cx=6,dir=1,f=0,game=null,wink=0;
+// Hüte: mit Spielpunkten freispielen
+const HATS={tuch:{p:10,n:'Halstuch',x:9,y:5,rows:["RRR",".R."]},cowboy:{p:25,n:'Cowboyhut',x:9,y:-1,rows:["..HHH..","HHHHHHH"]},
+  krone:{p:40,n:'Krone',x:10,y:-2,rows:["G.G.G","GGGGG"]},bluete:{p:60,n:'Bergblume',x:13,y:-1,rows:[".P.","PGP",".P."]}};
+const frei=pt=>Object.keys(HATS).filter(k=>pt>=HATS[k].p);
+function nextHat(){
+  const fr=frei(st.punkte);
+  if(!fr.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zum ${HATS[k].n}!`);return}
+  const liste=['',...fr];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
+  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Hut.');save();
+}
+const EI='Erst muss der Puma aus der Höhle. Tipp drauf!';
+function canPlay(){
+  if(st.ei){say(EI);return false}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return false}
+  if(st.krank){say('Mir geht es nicht gut zum Spielen …');return false}
+  return true}
+
+// Minispiel Hirschjagd: Finger auf die Szene, nach links zurückziehen (Puma duckt sich),
+// dann nach rechts schieben – der Puma schnellt los. Am besten springen, wenn der Hirsch grast.
+const GS=.7,GX=-3,RUNDEN=6;
+function startGame(type){
+  if(game||!canPlay())return;anim=null;$('spielwahl').hidden=true;
+  game={type,t:0,score:0,n:0};newDeer();
+  say('Finger auf die Wiese, nach hinten ziehen, dann nach vorne schieben!');
+}
+function newDeer(){Object.assign(game,{dx:17+Math.random()*6,gt:Math.floor(Math.random()*30),phase:'ziel',back:0,maxBack:0,px:GX,jy:0,rot:0,lt:0,hit:false,scheu:false,fx:0})}
+function svgPt(e){const r=svg.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*32,y:(e.clientY-r.top)/r.height*24}}
+const grast=g=>g.gt%46<30;
+function leap(p){
+  const g=game;g.phase='sprung';g.power=p;g.lt=0;g.x0=GX-p*.25;g.dist=p*2.3;g.scheu=!grast(g);buzz(1);
+  if(g.scheu)say('Der Hirsch hat dich gesehen!');
+}
+$('pet').addEventListener('pointerdown',e=>{
+  const g=game;if(!g||g.phase!=='ziel')return;
+  e.preventDefault();g.phase='ziehen';g.sx=svgPt(e).x;g.back=0;g.maxBack=0;
+  try{$('pet').setPointerCapture(e.pointerId)}catch(_){}
+});
+$('pet').addEventListener('pointermove',e=>{
+  const g=game;if(!g||g.phase!=='ziehen')return;
+  const b=Math.max(0,Math.min(8,g.sx-svgPt(e).x)),vor=Math.floor(g.back);g.back=b;
+  if(b>g.maxBack)g.maxBack=b;
+  if(Math.floor(b)!==vor)tock();
+  if(g.maxBack>=1.5&&g.maxBack-b>=1.5)leap(g.maxBack);
+});
+function loslassen(){const g=game;if(!g||g.phase!=='ziehen')return;g.phase='ziel';say(g.maxBack<1.5?'Weiter nach hinten ziehen …':'… und dann nach vorne schieben!');g.back=0;g.maxBack=0}
+$('pet').addEventListener('pointerup',loslassen);$('pet').addEventListener('pointercancel',loslassen);
+function endGame(){
+  const g=game;game=null;const pts=g.score;
+  const vorher=frei(st.punkte).length;st.punkte+=pts*2;const neu=frei(st.punkte);
+  st.laune=clamp(st.laune+10+pts*3);st.energie=clamp(st.energie-12);st.satt=clamp(st.satt+pts*8);
+  buzz(3);say(`Jagd vorbei: ${pts} von ${RUNDEN} Hirschen!`+(neu.length>vorher?` Neu: ${HATS[neu[neu.length-1]].n}!`:''));render();save();
+}
+function drawGame(){
+  const g=game;g.t++;
+  const front=x=>x+8+8*GS;
+  if(g.phase==='ziel'||g.phase==='ziehen'){
+    g.gt++;g.dx=Math.max(15,Math.min(23,g.dx+Math.sin(g.t*.07)*.05));
+    deer(g.dx,14,{flip:true,graze:grast(g),leg:0});
+    const b=g.phase==='ziehen'?g.back:0;
+    puma(GX-b*.25,11,{sc:GS,sy:1-b*.04,tail:f%6<3,zu:false});
+    if(b>.5){const lx=front(GX)+b*2.3;for(let k=1;k<=4;k++){const p=k/5,ax=front(GX)+b*2.3*p;px(ax,17-Math.sin(Math.PI*p)*(2+b*.6),'edge',.35,.35)}px(lx-.4,21.2,'rot',.8,.4)}
+  }
+  if(g.phase==='sprung'){
+    g.lt++;const p=Math.min(1,g.lt/9);
+    const x=g.x0+g.dist*p,yo=-Math.sin(Math.PI*p)*(2+g.power*.6);
+    if(g.scheu){g.dx+=.9;deer(g.dx,14,{leg:f&1})}else deer(g.dx,14,{flip:true,graze:true});
+    puma(x,11+yo,{sc:GS,rot:-25*Math.cos(Math.PI*p),leg:1});
+    if(p>=1){g.fx=front(x);g.px=x;g.hit=!g.scheu&&g.fx>=g.dx+.5&&g.fx<=g.dx+9.5;g.phase='landung';g.lt=0;
+      if(g.hit){g.score++;buzz(2);say(`Erwischt! ${g.score}`)}else if(!g.scheu){tock();say(g.fx<g.dx+.5?'Zu kurz gesprungen!':'Drüber hinweg!')}}
+  }
+  if(g.phase==='landung'){
+    g.lt++;
+    if(g.hit){puma(g.px,11,{sc:GS,mampf:g.lt%2,zu:g.lt%4<2});sprite(HEART,g.fx-1,8-g.lt*.4)}
+    else{g.dx+=1.1;deer(g.dx,14,{leg:f&1});puma(g.px,11,{sc:GS,tail:f%4<2})}
+    if(g.lt>=12){g.n++;if(g.n>=RUNDEN)return endGame();newDeer()}
+  }
+  if(game)out+=`<text x="1" y="3" font-size="2.4" fill="var(--ink)" font-family="var(--font)">${g.score}/${RUNDEN}</text>`;
+}
+
+// Start: Felsenhöhle. Mit jedem Tippen guckt das Pumajunge ein Stück weiter heraus.
+function drawDen(){
+  const w=anim?.type==='wobble'?(anim.t%2?.4:-.4):0;
+  out+=`<path d="M${6+w} 21 Q${8+w} 11 ${16+w} 11 Q${25+w} 11 ${27+w} 21Z" fill="var(--fels)" stroke="var(--edge)" stroke-width=".3"/><ellipse cx="${16+w}" cy="19.6" rx="3.6" ry="2.6" fill="var(--night)"/>`;
+  if(st.taps>=2){px(14.6+w,18.4,'sun',.7,.7);px(16.7+w,18.4,'sun',.7,.7)}
+  if(st.taps>=3){px(13.2+w,19.6,'bone',1.2,.15);px(18.2+w,19.6,'bone',1.2,.15)}
+  if(st.taps>=4)px(15.6+w,19.4,'nose',.8,.5);
+}
+// Hintergrund: Berge, Tanne rechts, Felsplatte links
+function backdrop(nacht,wt){
+  if(nacht){out+=`<rect width="32" height="24" fill="var(--night)"/>`;
+    [[3,3],[8,2],[13,4],[17,1.5],[21,3],[24,5]].forEach(([x,y],k)=>{if((f>>3)%7!==k)px(x,y,'moon',.3,.3)});
+    out+=`<circle cx="27" cy="4" r="1.8" fill="var(--moon)"/>`}
+  else{if(wt!=='klar')out+=`<rect width="32" height="24" fill="var(--grau)"/>`;else out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+    const wx=((f*.04+10)%46)-9;out+=`<g fill="var(--cloud)"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`}
+  out+=`<path d="M-2 21 L6 9 L11 15 L17 7 L25 17 L34 11 L34 21Z" fill="var(--berg)"/><path d="M4.5 11.2 L6 9 L7.4 11 Z M15.6 9 L17 7 L18.5 9.2 Z" fill="var(--schnee)"/><path d="M-2 21 L8 15 L15 19 L22 14 L34 20 L34 21Z" fill="var(--berg2)" opacity=".8"/>`;
+  px(0,21,'ground',32,3);px(0,21,'edge',32,.2);
+  if(!game){px(28.6,16,'stamm',1,5);for(const [w,yy] of [[6,15.5],[5,12.5],[3.6,9.8]])out+=`<path d="M${29.1-w/2} ${yy+1.2} L29.1 ${yy-2.4} L${29.1+w/2} ${yy+1.2}Z" fill="var(--tanne)"/>`}
+}
+function start(type,len){anim={type,t:0,len}}
+function frame(){
+  out='';f++;
+  const A=anim,t=A?A.t:0,z=st.schlaf;
+  let y=11,o={leg:0,zu:z||f%53<2,flip:dir<0,tail:f%40<4},after=()=>{};
+  const jetzt=new Date(),nacht=isNight(jetzt),wt=weather(jetzt);
+  backdrop(nacht,wt);
+  if(st.ei){drawDen();if(anim&&++anim.t>=anim.len)anim=null;svg.innerHTML=out;return}
+  if(!game)for(let i=0;i<st.poo;i++)sprite(KNOCHEN,1+i*6,21.6);
+  if(game){drawGame();svg.innerHTML=out;return}
+  const sc=SCALE[st.stufe]||1,maxX=26-16*sc;
+  if(!A&&!z){
+    if(f%3===0){cx+=dir*.8;if(cx<0||cx>maxX){dir*=-1;cx=Math.max(0,Math.min(maxX,cx))}}
+    o.leg=(f>>1)&1;o.flip=dir<0;
+    if(f%50===0&&Math.random()<.7){
+      const k=['laptop','krallen','lauern','zirpen','hirsch','gaehnen'][Math.floor(Math.random()*6)];
+      start(k,{hirsch:60,krallen:34}[k]||32);
+      say({laptop:`${nm()} arbeitet am Laptop …`,krallen:`${nm()} wetzt die Krallen an der Tanne.`,lauern:`${nm()} lauert … gleich springt er!`,zirpen:`Piep, piep! Pumas können nicht brüllen, sie zirpen.`,hirsch:'Da hinten zieht ein Hirsch vorbei …',gaehnen:`${nm()} gähnt. Was für Zähne!`}[k])}
+    if(!wink&&Math.random()<.012){wink=7;if(Math.random()<.3)say(`${nm()} zwinkert dir zu 😉`)}
+  }
+  if(wink>0){wink--;if(!z)o.wink=true}
+  switch(A?.type){
+    case'eat':{ // Hirschkeule fällt vor die Schnauze, mampfen
+      o.flip=false;const [hx]=kopf(cx,y,o);
+      if(t<8)sprite(KEULE,hx,t*1.6-3);
+      else{sprite(KEULE.map(r=>r.slice(Math.min(6,Math.floor((t-8)/1.5)))),hx+Math.min(6,Math.floor((t-8)/1.5)),18);o.mampf=t%2===0;o.rot=t%2?6:10}
+      break}
+    case'zapfen':{ // Tannenzapfen rollt heran, Pfote haut ihn weg
+      o.flip=false;let bx,by;const [hx]=kopf(cx,y,o);
+      if(t<10){bx=31-(31-hx)*t/10;by=17.5}else{const p=(t-10)/10;bx=hx+p*18;by=17.5-10*p*(1-p)*3}
+      if(t<20)after=()=>sprite(ZAPFEN,Math.round(bx),Math.round(by));
+      if(t>=8&&t<12){o.rot=-14;if(t===9)tock()}
+      if(t>=20){o.sy=t%4<2?.85:1;o.tail=t%2}
+      break}
+    case'clean':{ // Fell putzen: Pfote lecken, Glitzer
+      o.flip=false;o.zu=true;o.lick=t%4<2;o.rot=t%8<4?8:4;
+      const [hx,hy]=kopf(cx,y,o);for(let k=0;k<3;k++)px(hx-2-k*3,hy+2-((t*.4+k*2)%4),'sun',.4,.4);
+      if(t===A.len-1)say('Fell glänzt!');
+      break}
+    case'laptop':{ // tippen mit den Vorderpfoten
+      o.flip=false;o.rot=f%2?-6:-3;if(f%2)tock();const [hx]=kopf(cx,y,o);
+      after=()=>{px(hx-2,16.6,'ink',6,3.4);px(hx,17.8,'sky',1,.8);px(hx-3,20,'ink',8,.7)};
+      if(t===A.len-1)say('Fertig gearbeitet!');
+      break}
+    case'krallen':{ // aufrichten an der Tanne, Kratzspuren bleiben
+      o.flip=false;cx=Math.min(maxX+2,27-8-7*sc);o.rot=-40;o.tail=t%3===0;if(t%4===0)tock();
+      const n=Math.min(3,Math.floor(t/7));after=()=>{for(let k=0;k<n;k++)px(28.7+k*.3,13.5+k*.2,'tip',.15,1.6)};
+      break}
+    case'lauern':{ // tief ducken, Rute zuckt, dann Sprung nach vorne
+      o.zu=false;
+      if(t<22){o.sy=.72;o.tail=t%3===0;o.leg=0}
+      else{const p=(t-22)/10;cx=Math.max(0,Math.min(maxX,cx+dir*.9));y=11-Math.sin(Math.PI*p)*3;o.rot=-25*Math.cos(Math.PI*p);o.leg=1;if(t===22)tock()}
+      break}
+    case'zirpen':{ // Pumas zirpen und pfeifen
+      const [hx,hy]=kopf(cx,y,o);o.mampf=t%8<4;
+      for(let k=0;k<2;k++){const tt=(t+k*8)%16;out+=`<text x="${hx+(o.flip?-3:1)+tt*.15}" y="${hy-tt*.4}" font-size="2.4" fill="var(--ink)" font-family="var(--font)">♪</text>`}
+      if(t%8===0)tock();
+      break}
+    case'hirsch':{ // Hirsch läuft hinten durchs Bild, der Puma schaut ihm nach und duckt sich
+      const hx=34-t*.75;after=()=>{};out+=`<g transform="translate(${hx} 14.5) scale(.6)">`;const save_=out;out='';deer(0,0,{flip:true,leg:(f>>1)&1});const d=out;out=save_+d+'</g>';
+      o.flip=hx+3<cx+8;o.sy=.8;o.tail=t%4<2;o.zu=false;
+      if(t===A.len-1)say('Weg ist er. Hunger …');
+      break}
+    case'gaehnen':{o.zu=t>4&&t<22;o.mampf=t>4&&t<22;o.rot=t>4&&t<22?-8:0;break}
+    case'med':{
+      const [hx,hy]=kopf(cx,y,o);
+      if(t<8)sprite(["RII"],hx-1,2+t*.8);else{o.zu=false;for(let k=0;k<4;k++)px(hx-6+k*3,hy-(t-8)*.5-(k%2),'sun',.5,.5)}
+      break}
+    case'kraul':{ // Hand streicht über den Rücken, der Puma schnurrt
+      o.zu=true;o.sy=t%4<2?.97:1;o.tail=t%3===0;
+      const sc2=SCALE[st.stufe]||1,rx=cx+8+(Math.sin(t*.45)*4-1)*sc2*(o.flip?-1:1),ry=y+10-7.6*sc2;
+      after=()=>{sprite(["UUU.","UUUU","UUU."],rx-2,ry-2);const [hx,hy]=kopf(cx,y,o);if(t>6)sprite(HEART,hx-2,hy-2-(t-6)*.35)};
+      if(t===A.len-1){o.zu=false;o.wink=true;say('Schnurrrr … mehr davon!')}
+      break}
+    case'pet':{o.zu=t<8;o.wink=t>=8;o.tail=t%2;const [hx,hy]=kopf(cx,y,o);after=()=>sprite(HEART,hx-2,hy-2-t*.6);break}
+  }
+  if(st.krank&&A?.type!=='med')after=(a=>()=>{a();const [hx,hy]=kopf(cx,y,o);sprite([".EEE.","E.E.E","EEEEE",".E.E."],hx-2,hy-6+Math.sin(f*.3)*.6)})(after);
+  if(z){y=11;o.sy=.62;o.leg=0;const [hx,hy]=kopf(cx,y,o);for(let k=0;k<2;k++)out+=`<text x="${hx+1+k*2}" y="${hy-((f*.3+k*3)%6)}" font-size="${3-k}" fill="var(--${nacht?'moon':'ink'})" font-family="var(--font)">z</text>`}
+  puma(cx,y,o);after();
+  if(wt!=='klar'&&!nacht)for(let k=0;k<14;k++)wt==='schnee'?px(((k*7.3)+Math.sin(f*.05+k))%32,(k*5.1+f*.15)%22,'schnee',.45,.45):px(((k*7.3)+Math.sin(f*.05+k))%32,(k*5.1+f*.6)%22,'rain',.25,.8);
+  if(A&&++A.t>=A.len)anim=null;
+  svg.innerHTML=out;
+}
+setInterval(frame,150);
+
+// Handlungen
+function act(ch,txt,n,type,len){
+  if(st.ei){say(EI);return}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
+  for(const k in ch)st[k]=clamp(st[k]+ch[k]);
+  buzz(n);start(type,len);say(txt);render();save();
+}
+$('pet').onclick=ev=>{
+  if(game)return;
+  if(!st.ei){if(!st.schlaf)purr(8);return act({laune:5},'Schnurrrr … ♥',1,'pet',14)}
+  st.taps++;start('wobble',6);
+  if(st.taps<5){say(['Da raschelt was in der Höhle …','Zwei leuchtende Augen!','Schnurrhaare!','Ein rosa Näschen!'][st.taps-1]);save();return}
+  st.ei=false;st.geb=Date.now();buzz(3);start('pet',12);say('Hallo! Ich bin ein Pumajunges mit Flecken. Wie soll ich heißen?');$('nameform').hidden=false;render();save();
+};
+function showName(){$('name').textContent=nm().toUpperCase()}
+$('nameform').onsubmit=e=>{e.preventDefault();st.name=($('nm').value||'').trim().slice(0,12)||'Puma';$('nameform').hidden=true;showName();say(`Ich heiße jetzt ${st.name}!`);save()};
+$('b-feed').onclick=()=>{if(!st.ei&&!st.schlaf&&st.poo<3&&Math.random()<.4)st.poo++;act({satt:25},'Mampf! Eine Hirschkeule.',2,'eat',18)};
+$('b-play').onclick=()=>{if(st.ei||st.schlaf)return act({},'',1);$('spielwahl').hidden=!$('spielwahl').hidden;if(!$('spielwahl').hidden)say('Kraulen oder Tannenzapfen?')};
+$('p-kraul').onclick=()=>{$('spielwahl').hidden=true;if(!st.ei&&!st.schlaf)purr(14);act({laune:15,sauber:2},`${nm()} lässt sich kraulen …`,1,'kraul',30)};
+$('p-zapfen').onclick=()=>{$('spielwahl').hidden=true;st.krank?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Ein Tannenzapfen! Tatze drauf!',3,'zapfen',28)};
+$('b-sleep').onclick=()=>{if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-clean').onclick=()=>{if(!st.schlaf&&!st.ei)st.poo=0;act({sauber:40,laune:5},'Schleck, schleck – Fell putzen wie eine Katze.',2,'clean',24)};
+$('b-med').onclick=()=>{
+  if(st.ei||st.schlaf)return act({},'',1);
+  if(!st.krank){buzz(1);say('Ich bin doch gesund!');return}
+  st.krank=false;st.krankMin=0;act({laune:10},'Bäh! … Aber jetzt geht es mir besser!',2,'med',16);
+};
+$('b-hut').onclick=()=>{if(st.ei)return say(EI);nextHat()};
+$('g-jagd').onclick=()=>startGame('jagd');
+// Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
+for(const id of ['pet','b-feed','b-play','p-kraul','p-zapfen','b-sleep','b-clean','b-med','g-jagd','b-hut']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
+setInterval(()=>{tick(.5);const m=mood();if(m&&!game)say(m);render();save()},30000);
+showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
+render();save();frame();{const m=mood();if(st.ei)say('Eine Felsenhöhle in den Bergen! Tipp sie an …');else if(m)say(m)}
+</script>
+</body></html>
