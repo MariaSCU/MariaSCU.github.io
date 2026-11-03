@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>*{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}</style>
+<title>Koala-Gotchi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Koala">
+<meta name="theme-color" content="#4f8a6a">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">
+<style>
+/* Layout wie Polar-Gotchi: Fenster mit Koala, darunter Werte und runde Tasten */
+:root{--bg:#f3f5f0;--fg:#24282a;--sky:#dcebf0;--sun:#f2c14e;--cloud:#ffffff;--ink:#2f3436;--eye:#1d1d1f;--acc:#4f8a6a;--koala:#8f979d;--koala2:#c6ccd0;--fluff:#eef0f1;--belly:#e8e3d9;--nose:#2b2b30;--edge:#5d656b;--ground:#c98d5e;--hill:#e0b98f;--trunk:#d8cfbd;--leaf:#5f8f6f;--leaf2:#8fb79a;--fire1:#e4522b;--fire2:#f7a928;--smoke:#a29c95;--rain:#5c8fb8;--night:#141b28;--moon:#efe9cf;--grau:#c9d1d4;--blass:#e9dfbf;--rot:#d9534f;--haut:#f1c9a5;--pellet:#6b4a33;--hut:#8a5a33;--font:"Silkscreen",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121614;--fg:#e3e7e4;--sky:#1b2a2c;--sun:#e9e4c9;--cloud:#2f3c3f;--ink:#d4dad6;--grau:#283335;--hill:#7d5e45;--ground:#8a5f40;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121614;--fg:#e3e7e4;--sky:#1b2a2c;--sun:#e9e4c9;--cloud:#2f3c3f;--ink:#d4dad6;--grau:#283335;--hill:#7d5e45;--ground:#8a5f40;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);display:grid;place-items:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.egg{width:min(340px,100%);display:grid;gap:14px;justify-items:center;padding-block:24px}
+h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
+.lcd{width:100%;background:var(--sky);border-radius:18px;overflow:hidden}
+.tap{position:relative;display:block;cursor:pointer}
+#scene{width:100%;display:block;shape-rendering:crispEdges}
+.sw{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.stats{width:100%;display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:10px;align-items:center}
+.bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%}
+.btns label{display:grid;place-items:center;position:relative;font-size:9px;border-radius:50%;aspect-ratio:1;max-width:100%;background:var(--acc);color:#fff;cursor:pointer;user-select:none;-webkit-user-select:none}
+.mehr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+.mehr label{position:relative;font-size:10px;padding:9px 14px;border-radius:999px;border:2px solid var(--acc);cursor:pointer;user-select:none;-webkit-user-select:none}
+.btns label:active,.mehr label:active{transform:scale(.93)}
+.btns label:has(input:focus-visible),.mehr label:has(input:focus-visible){outline:3px solid var(--ink)}
+#msg{font-size:11px;min-height:1.4em;text-align:center}
+.form{display:flex;gap:8px;width:100%}
+.form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
+.form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--acc);color:#fff}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="egg">
+  <h1 id="name">KOALA</h1>
+  <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" id="sw-pet" aria-label="Koala streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
+  <div id="msg">Hallo!</div>
+  <form id="nameform" class="form" hidden><input id="nm" maxlength="12" placeholder="Wie soll ich heißen?" autocomplete="off" aria-label="Name"><button>Fertig</button></form>
+  <div class="stats" id="stats"></div>
+  <div class="btns">
+    <label id="b-feed"><input type="checkbox" switch class="sw" id="sw-feed"><span>Futter</span></label><label id="b-play"><input type="checkbox" switch class="sw" id="sw-play"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw" id="sw-sleep"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw" id="sw-clean"><span>Dusche</span></label>
+  </div>
+  <div class="mehr" id="spielwahl" hidden><label id="p-kraul"><input type="checkbox" switch class="sw" id="sw-kraul"><span>Kraulen</span></label><label id="p-ast"><input type="checkbox" switch class="sw" id="sw-ast"><span>Ast schaukeln</span></label></div>
+  <div class="mehr">
+    <label id="b-med"><input type="checkbox" switch class="sw" id="sw-med"><span>Medizin</span></label>
+    <label id="g-flucht"><input type="checkbox" switch class="sw" id="sw-flucht"><span>Feuerflucht</span></label><label id="g-blatt"><input type="checkbox" switch class="sw" id="sw-blatt"><span>Blätter fangen</span></label><label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Hüte</span></label>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// Haptik: iPhone über Schalter-Feld, Android über vibrate
+function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
+function buzz(n=1,gap=120){
+  if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_,i)=>i%2?gap:40));return}
+  for(let i=1;i<n;i++)setTimeout(pulse,i*gap);
+}
+function tock(){try{navigator.vibrate?navigator.vibrate(15):pulse()}catch(e){}}
+
+// Werte
+const clamp=v=>Math.max(0,Math.min(100,v));
+const NAMES={satt:'Satt',laune:'Laune',energie:'Energie',sauber:'Sauber'};
+const DEF={satt:70,laune:70,energie:70,sauber:90,schlaf:false,poo:0,ei:true,taps:0,name:'',stufe:'baby',nacht:false,krank:false,krankMin:0,punkte:0,hut:'',geb:Date.now(),t:Date.now()};
+let st={...DEF};try{st={...DEF,...JSON.parse(localStorage.getItem('koala')||'{}')}}catch(e){}
+function save(){st.t=Date.now();try{localStorage.setItem('koala',JSON.stringify(st))}catch(e){}}
+function say(t){$('msg').textContent=t}
+const nm=()=>st.name||'Koala';
+// Pro Minute: Werte sinken (im Schlaf steigt Energie). Abwesenheit wird nachgeholt, max. 24 h.
+function tick(min){
+  if(st.ei)return;
+  const z=st.schlaf;
+  st.satt=clamp(st.satt-min*(z?.3:.6));st.laune=clamp(st.laune-min*(z?.1:.5));
+  st.sauber=clamp(st.sauber-min*.3);st.energie=clamp(st.energie+min*(z?2:-.4));
+  if(Math.random()<min/25&&st.poo<3)st.poo++;
+  st.sauber=clamp(st.sauber-st.poo*min*.5);
+  // Krank erst nach einer Stunde Vernachlässigung; der Koala stirbt nie
+  const schlecht=['satt','laune','sauber'].filter(k=>st[k]<20).length>=2;
+  if(!st.krank){st.krankMin=schlecht?st.krankMin+min:Math.max(0,st.krankMin-min);if(st.krankMin>=60){st.krank=true;say('Mir ist schlecht …')}}
+  else st.laune=clamp(st.laune-min*.5);
+  const n=isNight(new Date());
+  if(n&&!st.nacht){st.schlaf=true;say('Gute Nacht!')}
+  if(!n&&st.nacht){st.schlaf=false;say('Guten Morgen!')}
+  st.nacht=n;
+  if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
+}
+tick(Math.min(1440,(Date.now()-st.t)/60000));
+function isNight(d){const h=d.getHours();return h>=21||h<7}
+// Wetter im Busch: pro Stunde fest ausgewürfelt, meist trocken
+function weather(d){
+  const r=((d.getFullYear()*400+d.getMonth()*31+d.getDate())*24+d.getHours())*2654435761%1000/1000;
+  return r<.2?'regen':'klar';
+}
+function stage(){const d=(Date.now()-st.geb)/864e5;return d<1?'baby':d<4?'kind':'gross'}
+const STUFE={baby:'Joey',kind:'Jungkoala',gross:'Groß'},SCALE={baby:.6,kind:.8,gross:1};
+function render(){
+  const sg=st.ei?st.stufe:stage();if(sg!==st.stufe){st.stufe=sg;say(sg==='kind'?'Ich bin gewachsen!':'Ich bin jetzt ein großer Koala!')}
+  const tage=Math.floor((Date.now()-st.geb)/864e5);
+  document.querySelector('#b-sleep span').textContent=st.schlaf?'Weck':'Schlaf';
+  $('stats').innerHTML=`<span>Alter</span><span>${tage} Tag${tage===1?'':'e'} · ${STUFE[st.stufe]}</span>`+Object.keys(NAMES).map(k=>`<span>${NAMES[k]}</span><div class="bar"><i style="width:${st[k]}%"></i></div>`).join('');
+}
+function mood(){
+  if(st.krank&&!st.schlaf)return'Mir ist schlecht … Medizin?';
+  if(st.schlaf)return'Zzz …';
+  const low=Object.keys(NAMES).filter(k=>st[k]<25);
+  return low.length?{satt:'Ich hab Hunger auf Eukalyptus!',laune:'Mir ist langweilig …',energie:'So müde …',sauber:'Mein Fell ist ganz staubig!'}[low[0]]:null;
+}
+
+// Zeichnen: Szene aus Pixeln, 32 × 24 Felder
+const svg=$('scene');let out='';
+const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
+const COL={U:'haut',K:'ink',D:'eye',W:'fluff',E:'edge',G:'sun',P:'pellet',R:'rot',L:'leaf',M:'leaf2',H:'hut',T:'trunk'};
+const sprite=(rows,x,y)=>rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(COL[ch])px(x+i,y+j,COL[ch])}));
+const ZWEIG=["T....","TMM..","TLLM.",".TMLL","..TLM"],BLATT=[".MM..","MLLL.","..LLM"],HEART=[".R.R.","RRRRR",".RRR.","..R.."],KOT=["P.P",".P."];
+// Koala von vorn: große flauschige Ohren, Knopfaugen, dicke dunkle Nase, heller Bauch
+function koala(x,y,o){
+  const r=[".WWW.....WWW.","WFFWWWWWWWFFW","WFFWWWWWWWFFW",".WWWDWWWDWWW.","..WWWWNWWWW..","..WWWNNNWWW..","...WWWNWWW...",".WWWWCCCWWWW.","WWWWCCCCCWWWW","WWWWCCCCCWWWW",".WWWWWWWWWWW.",o.leg?"..WW.....WW..":".WW.......WW."].map(s=>[...s]);
+  if(o.upL){r[8][0]=r[9][0]='.';r[6][1]=r[6][2]=r[7][0]='W'}
+  if(o.upR){r[8][12]=r[9][12]='.';r[6][10]=r[6][11]=r[7][12]='W'}
+  if(o.zu){r[3][4]=r[3][8]='L'}else if(o.wink)r[3][8]='L';
+  if(o.mampf)r[7][6]='D';
+  const sc=SCALE[st.stufe]||1,sx=Math.cos(o.turn||0),sy=o.sy||1,s=sc*sy,d=Math.sin(o.turn||0)*2.6;
+  const C={W:st.krank?'blass':'koala',F:'fluff',C:'belly',N:'nose',D:'eye',L:st.krank?'blass':'koala'};
+  const voll=(i,j)=>r[j]&&r[j][i]&&r[j][i]!=='.';
+  const g=(dx,dy,front)=>{
+    out+=`<g transform="translate(${x+6.5+dx} ${y+10-6*s+dy}) rotate(${o.rot||0}) scale(${sx*sc} ${s}) translate(-6.5 -6)">`;
+    if(front)for(let j=-1;j<=r.length;j++)for(let i=-1;i<=13;i++)if(!voll(i,j)&&(voll(i-1,j)||voll(i+1,j)||voll(i,j-1)||voll(i,j+1)))px(i,j,'edge');
+    r.forEach((row,j)=>row.forEach((c,i)=>{if(c==='.')return;px(i,j,front?C[c]:'koala2');if(front&&c==='L')px(i,j+.4,'eye',1,.3)}));
+    if(front&&st.hut){const h=HATS[st.hut];sprite(h.rows,h.x,h.y)}
+    out+='</g>'};
+  for(let k=Math.abs(d);k>.01;k-=.4)g(-Math.sign(d)*k,-k*.35,false);
+  g(0,0,true);
+  if(o.wink&&!o.zu){const P=(lx,ly)=>[x+6.5+(lx-6.5)*sc*sx,y+10-6*s+(ly-6)*s];px(...P(10.6,2.2),'sun',.5,.5);px(...P(11.6,1.3),'sun',.35,.35)}
+}
+// Flammen am Boden von x0 bis x1, Höhe h
+function flames(x0,x1,h){for(let x=x0;x<x1;x+=1.4){const hh=h*(.6+.4*Math.sin(f*.9+x*1.7));px(x,21-hh,'fire1',1.2,hh);px(x+.3,21-hh*.55,'fire2',.6,hh*.55)}}
+let anim=null,cx=7,dir=1,f=0,spin=1,game=null,wink=0;
+// Hüte: mit Spielpunkten freispielen
+const HATS={brille:{p:10,n:'Sonnenbrille',x:3,y:3,rows:["KKK.KKK"]},buschhut:{p:25,n:'Buschhut',x:2,y:-1,rows:["..HHHHH..","HHHHHHHHH"]},
+  krone:{p:40,n:'Krone',x:4,y:-1,rows:["G.G.G","GGGGG"]},bluete:{p:60,n:'Eukalyptusblüte',x:10,y:-1,rows:[".R.","RGR",".R."]}};
+const frei=pt=>Object.keys(HATS).filter(k=>pt>=HATS[k].p);
+function nextHat(){
+  const fr=frei(st.punkte);
+  if(!fr.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zur ${HATS[k].n}!`);return}
+  const liste=['',...fr];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
+  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Hut.');save();
+}
+const EI='Erst muss der Koala aus dem Busch. Tipp drauf!';
+function canPlay(){
+  if(st.ei){say(EI);return false}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return false}
+  if(st.krank){say('Mir geht es nicht gut zum Spielen …');return false}
+  return true}
+// Minispiele: jedes Antippen der Szene ist ein Spielzug
+function startGame(type){
+  if(game||!canPlay())return;anim=null;
+  game={type,t:0,score:0,n:0,x:9,tx:9,jy:0,vy:0};newRound();
+  say({flucht:'Buschfeuer! Tipp, um über die Flammen zu springen!',blatt:'Tipp dorthin, wo das Blatt hinfällt!'}[type]);
+}
+function newRound(){Object.assign(game,{fx:3+Math.random()*24,fy:-3,fl:34+Math.random()*6,done:false})}
+function endGame(){
+  const g=game;game=null;const pts=g.score;
+  const vorher=frei(st.punkte).length;st.punkte+=pts;const neu=frei(st.punkte);
+  st.laune=clamp(st.laune+10+pts*2);st.energie=clamp(st.energie-10);if(g.type==='blatt')st.satt=clamp(st.satt+pts*2);
+  buzz(3);say(`Spiel vorbei: ${pts} Punkte!`+(g.type==='flucht'?(pts>=8?' Super geflüchtet!':' Puh, gerettet!'):'')+(neu.length>vorher?` Neu: ${HATS[neu[neu.length-1]].n}!`:''));render();save();
+}
+function tapX(ev){const r=svg.getBoundingClientRect?.()||{left:0,width:320};return((ev?.clientX??r.left+r.width/2)-r.left)/r.width*32}
+function gameTap(ev){
+  const g=game;
+  if(g.type==='flucht'&&g.jy===0){g.vy=-1.5;tock()}
+  if(g.type==='blatt')g.tx=Math.max(0,Math.min(19,tapX(ev)-6.5));
+}
+function drawGame(){
+  const g=game;g.t++;
+  if(g.type==='flucht'){
+    // Rauch am Himmel, Koala rennt auf der Stelle, Flammen kommen von rechts
+    for(let k=0;k<6;k++)out+=`<circle cx="${(k*6.1-f*.4+64)%38-3}" cy="${4+(k%3)*1.5}" r="${1.6+(k%2)}" fill="var(--smoke)" opacity=".5"/>`;
+    g.jy+=g.vy;if(g.vy||g.jy<0)g.vy+=.22;if(g.jy>=0){g.jy=0;g.vy=0}
+    koala(2,11+g.jy,{leg:f&1,upL:g.jy<0,upR:g.jy<0});
+    g.fl-=.9+g.score*.06;flames(g.fl,g.fl+3,3.2);
+    if(!g.done&&g.fl+1.5<8.5){g.done=true;if(g.jy>-2){buzz(2,80);say('Autsch, heiß!')}else{g.score++;say('Drüber! '+g.score)}}
+    if(g.fl<-4){g.n++;if(g.n>=10)return endGame();newRound()}
+  }
+  if(g.type==='blatt'){
+    g.x+=Math.sign(g.tx-g.x)*Math.min(1.5,Math.abs(g.tx-g.x));
+    koala(g.x,11,{leg:(f>>1)&1,upL:1,upR:1});g.fy+=.6;sprite(BLATT,Math.round(g.fx+Math.sin(g.fy)*.8),Math.round(g.fy));
+    if(g.fy>=9){if(Math.abs(g.fx+2.5-(g.x+6.5))<4.5){g.score++;tock();say('Gefangen! '+g.score)}else say('Daneben!');g.n++;newRound()}
+    if(g.n>=8)return endGame();
+  }
+  if(game)out+=`<text x="1" y="3" font-size="2.4" fill="var(--ink)" font-family="var(--font)">${g.score}</text>`;
+}
+// Start: Eukalyptusbusch. Mit jedem Tippen guckt das Koalababy ein Stück weiter heraus.
+function drawBush(){
+  const w=anim?.type==='wobble'?(anim.t%2?.4:-.4):0;
+  out+=`<g fill="var(--leaf)"><circle cx="${12+w}" cy="19" r="4.5"/><circle cx="${20+w}" cy="19" r="4.5"/><circle cx="${16+w}" cy="16.5" r="5"/></g><g fill="var(--leaf2)"><circle cx="${13.5+w}" cy="16" r="1.4"/><circle cx="${19+w}" cy="15" r="1.2"/><circle cx="${16.5+w}" cy="19.5" r="1.3"/></g>`;
+  if(st.taps>=1)px(12.8+w,13.4,'koala',1.6,1.6),px(17.6+w,13.4,'koala',1.6,1.6);
+  if(st.taps>=2){px(14.6+w,17,'eye',.7,.7);px(16.7+w,17,'eye',.7,.7)}
+  if(st.taps>=4)px(15.4+w,18,'nose',1.2,1);
+}
+// Hintergrund mit Eukalyptusbaum rechts
+function backdrop(nacht,wt){
+  if(nacht){out+=`<rect width="32" height="24" fill="var(--night)"/>`;
+    // Kreuz des Südens
+    [[13,2,.5],[13,8,.5],[10.6,4.8,.45],[15.6,5.4,.4],[14.3,6.6,.3]].forEach(([x,y,s],k)=>{if((f>>3)%9!==k)px(x,y,'moon',s,s)});
+    out+=`<circle cx="5" cy="4" r="1.8" fill="var(--moon)"/>`}
+  else{if(wt==='regen')out+=`<rect width="32" height="24" fill="var(--grau)"/>`;else out+=`<circle cx="5" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+    const wx=((f*.04+10)%46)-9;out+=`<g fill="var(--cloud)"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`}
+  out+=`<path d="M0 21 Q5 16 10 19 T20 18 T32 19 L32 21Z" fill="var(--hill)" opacity=".7"/>`;
+  px(0,21,'ground',32,3);px(0,21,'edge',32,.2);
+  for(const gx of [3,11,19])px(gx,20.4,'leaf',.3,.7),px(gx+.5,20.1,'leaf',.3,1);
+  if(!game||game.type==='blatt'){px(26.4,7,'trunk',2.2,14.2);px(25.4,12,'trunk',1.2,.6);
+    out+=`<g fill="var(--leaf)"><circle cx="27.5" cy="5.5" r="3.6"/><circle cx="24.2" cy="7" r="2.6"/><circle cx="30.6" cy="7.3" r="2.6"/></g><g fill="var(--leaf2)"><circle cx="26" cy="4.6" r="1.1"/><circle cx="29.3" cy="6" r="1"/><circle cx="23.6" cy="7.6" r=".8"/></g>`}
+}
+function start(type,len){anim={type,t:0,len}}
+function frame(){
+  out='';f++;
+  const A=anim,t=A?A.t:0,z=st.schlaf;
+  let y=11,o={leg:0,zu:z||f%53<2},after=()=>{};
+  const jetzt=new Date(),nacht=isNight(jetzt),wt=weather(jetzt);
+  backdrop(nacht,wt);
+  if(st.ei){drawBush();if(anim&&++anim.t>=anim.len)anim=null;svg.innerHTML=out;return}
+  if(!game)for(let i=0;i<st.poo;i++)sprite(KOT,1+i*4,21.8);
+  if(game){drawGame();svg.innerHTML=out;return}
+  if(!A&&!z){
+    if(f%3===0){cx+=dir;if(cx<1||cx>13)dir*=-1}
+    o.leg=(f>>1)&1;
+    if(f%50===0&&Math.random()<.7){
+      const k=!nacht&&wt!=='regen'&&Math.random()<.15?'feuer':['laptop','schnuppern','gaehnen','kratzen','turn'][Math.floor(Math.random()*5)];
+      spin=-spin;start(k,k==='feuer'?46:k==='turn'?30:36);
+      say({feuer:`Buschfeuer! ${nm()} flüchtet!`,laptop:`${nm()} arbeitet am Laptop …`,schnuppern:`${nm()} schnuppert … riecht nach Eukalyptus!`,gaehnen:`${nm()} gähnt herzhaft.`,kratzen:`${nm()} kratzt sich am Ohr.`,turn:`${nm()} schaut sich um …`}[k])}
+    if(!wink&&Math.random()<.012){wink=7;if(Math.random()<.3)say(`${nm()} zwinkert dir zu 😉`)}
+  }
+  if(wink>0){wink--;if(!z)o.wink=true}
+  switch(A?.type){
+    case'eat':{ // Eukalyptuszweig fällt von oben, Pfoten hoch, mampfen
+      o.upL=o.upR=1;
+      if(t<8)sprite(ZWEIG,cx+4,t*1.2-4);
+      else{sprite(ZWEIG.slice(0,Math.max(0,5-Math.floor((t-8)/1.5))),cx+4,6);o.mampf=t%2===0;if(t%2)y=10}
+      break}
+    case'ast':{ // am Ast hängen und schaukeln
+      const sc=SCALE[st.stufe]||1;o.upL=o.upR=1;o.leg=1;y=-1.5+12*sc;o.rot=Math.sin(t*.45)*16;
+      out+=`<rect x="${cx-1.5}" y="8.6" width="16" height=".9" fill="var(--trunk)"/>`;
+      if(t%7===0)tock();if(t===A.len-1)say('Hui!');
+      break}
+    case'clean':{ // Regenwolke über dem Koala, danach Wasser abschütteln
+      if(t<12){after=()=>{out+=`<g fill="var(--cloud)"><circle cx="${cx+5}" cy="3" r="1.8"/><circle cx="${cx+7.5}" cy="2.6" r="2.2"/><circle cx="${cx+9.5}" cy="3.2" r="1.6"/></g>`;for(let k=0;k<6;k++)px(cx+4+k*1.2,4.5+(t*.9+k*1.7)%12,'rain',.3,.8)};o.zu=true}
+      else{o.turn=Math.sin(t*1.2)*.5;for(let k=0;k<6;k++)px(cx+6.5+Math.cos(k+t)*(t-10)*.9,15+Math.sin(k*2+t)*(t-10)*.5,'rain',.45,.45)}
+      break}
+    case'turn':{o.turn=spin*Math.sin(t/A.len*Math.PI)*.75;break}
+    case'laptop':{ // tippen: Pfoten abwechselnd auf der Tastatur
+      o.upL=f%2;o.upR=!o.upL;if(f%2)tock();
+      after=()=>{px(cx+3.5,16.6,'ink',6,3.4);px(cx+6,17.8,'sky',1,.8);px(cx+1.5,20,'ink',10,.7)};
+      if(t===A.len-1)say('Fertig gearbeitet!');
+      break}
+    case'schnuppern':{
+      y=10+(t%6<3?0:.4);o.zu=t%12<6;
+      for(let k=0;k<3;k++)px(cx+6.2+Math.sin(t*.5+k)*1.2,7-((t*.4+k*2)%5),'leaf2',.4,.4);
+      break}
+    case'gaehnen':{o.zu=t>6&&t<26;o.mampf=t>6&&t<26;o.upL=o.upR=t>8&&t<24;y=t>8&&t<24?10.6:11;break}
+    case'kratzen':{o.upR=1;o.turn=.15;if(t%3===0)tock();if(t%4<2)y=10.7;break}
+    case'feuer':{ // Buschfeuer von links: Koala rennt weg, Regen löscht, Koala kommt zurück
+      o.leg=f&1;o.zu=false;
+      const front=Math.min(t*1.3,30),h=t<24?3.5:3.5*Math.max(0,(46-t)/22);
+      for(let k=0;k<5;k++)out+=`<circle cx="${(k*5+t*.3)%front}" cy="${14-((t*.5+k*3)%10)}" r="${1.2+k%2}" fill="var(--smoke)" opacity=".55"/>`;
+      if(h>.2)after=()=>flames(0,front,h);
+      if(t<24)cx+=1.4;
+      if(t>=24){for(let k=0;k<16;k++)px((k*2.1+t*.2)%32,(k*3.7+t*1.4)%21,'rain',.25,.8);if(t===24)say('Regen! Das Feuer geht aus.')}
+      if(t>=34)cx=33-(t-34)*1.8;
+      if(t===A.len-1){cx=13;dir=-1;st.energie=clamp(st.energie-5);say('Puh, gerettet!');render();save()}
+      break}
+    case'med':{
+      if(t<8)sprite(["RWW"],cx+5,3+t*.8);else{o.upL=o.upR=1;for(let k=0;k<4;k++)px(cx+2+k*3,10-(t-8)*.5-(k%2),'sun',.5,.5)}
+      break}
+    case'kraul':{ // eine Hand krault den Kopf, der Koala genießt
+      const sc=SCALE[st.stufe]||1;o.zu=true;o.leg=t%2;o.turn=Math.sin(t*.3)*.25;if(t%4===0)tock();
+      after=()=>{sprite(["UUU.","UUUU","UUU."],cx+6.5+(Math.sin(t*.9)*2.5-2)*sc,21-12*sc-1.4);if(t>8)sprite(HEART,cx+10,8-(t-8)*.4)};
+      if(t===A.len-1){o.zu=false;o.wink=true;say('Hmmm … mehr davon!')}
+      break}
+    case'pet':{o.upL=o.upR=1;o.zu=t<7;o.wink=t>=7;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,cx+4,7-t*.6);break}
+  }
+  if(st.krank&&A?.type!=='med')after=(a=>()=>{a();sprite([".EEE.","E.E.E","EEEEE",".E.E."],cx+4,4+Math.sin(f*.3)*.6)})(after);
+  if(z){y=12;for(let k=0;k<2;k++)out+=`<text x="${cx+12+k*2}" y="${10-((f*.3+k*3)%6)}" font-size="${3-k}" fill="var(--${nacht?'moon':'ink'})" font-family="var(--font)">z</text>`}
+  koala(cx,y,o);after();
+  if(wt==='regen'&&!nacht)for(let k=0;k<14;k++)px(((k*7.3)+Math.sin(f*.05+k))%32,(k*5.1+f*.6)%22,'rain',.25,.8);
+  if(A&&++A.t>=A.len)anim=null;
+  svg.innerHTML=out;
+}
+setInterval(frame,150);
+
+// Handlungen
+function act(ch,txt,n,type,len){
+  if(st.ei){say(EI);return}
+  if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
+  if(anim?.type==='feuer'){say(`${nm()} ist gerade auf der Flucht!`);return}
+  for(const k in ch)st[k]=clamp(st[k]+ch[k]);
+  buzz(n);start(type,len);say(txt);render();save();
+}
+$('pet').onclick=ev=>{
+  if(game)return gameTap(ev);
+  if(!st.ei)return act({laune:5},'Hmmm! ♥',1,'pet',12);
+  st.taps++;start('wobble',6);
+  if(st.taps<5){say(['Da raschelt was im Busch …','Zwei flauschige Ohren!','Zwei Äuglein!','Eine dicke Nase!'][st.taps-1]);save();return}
+  st.ei=false;st.geb=Date.now();buzz(3);start('pet',12);say('Hallo! Wie soll ich heißen?');$('nameform').hidden=false;render();save();
+};
+function showName(){$('name').textContent=nm().toUpperCase()}
+$('nameform').onsubmit=e=>{e.preventDefault();st.name=($('nm').value||'').trim().slice(0,12)||'Koala';$('nameform').hidden=true;showName();say(`Ich heiße jetzt ${st.name}!`);save()};
+$('b-feed').onclick=()=>{if(!st.ei&&!st.schlaf&&st.poo<3&&Math.random()<.4)st.poo++;act({satt:25},'Mampf! Frischer Eukalyptus.',2,'eat',18)};
+$('b-play').onclick=()=>{if(st.ei||st.schlaf)return act({},'',1);$('spielwahl').hidden=!$('spielwahl').hidden;if(!$('spielwahl').hidden)say('Kraulen oder am Ast schaukeln?')};
+$('p-kraul').onclick=()=>{$('spielwahl').hidden=true;act({laune:15,sauber:2},`${nm()} lässt sich kraulen …`,2,'kraul',28)};
+$('p-ast').onclick=()=>{$('spielwahl').hidden=true;st.krank?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Ab an den Ast!',3,'ast',28)};
+$('b-sleep').onclick=()=>{if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-clean').onclick=()=>{if(!st.schlaf&&!st.ei)st.poo=0;act({sauber:40,laune:5},'Platsch! Eine Regendusche.',2,'clean',22)};
+$('b-med').onclick=()=>{
+  if(st.ei||st.schlaf)return act({},'',1);
+  if(!st.krank){buzz(1);say('Ich bin doch gesund!');return}
+  st.krank=false;st.krankMin=0;act({laune:10},'Bäh! … Aber jetzt geht es mir besser!',2,'med',16);
+};
+$('b-hut').onclick=()=>{if(st.ei)return say(EI);nextHat()};
+$('g-flucht').onclick=()=>startGame('flucht');$('g-blatt').onclick=()=>startGame('blatt');
+// Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
+for(const id of ['pet','b-feed','b-play','p-kraul','p-ast','b-sleep','b-clean','b-med','g-flucht','g-blatt','b-hut']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
+setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();save()},30000);
+showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
+render();save();frame();{const m=mood();if(st.ei)say('Ein Eukalyptusbusch! Tipp ihn an …');else if(m)say(m)}
+</script>
+</body></html>
