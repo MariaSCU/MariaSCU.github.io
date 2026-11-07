@@ -34,10 +34,19 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--btn)}
 .btns label:active,.mehr label:active,.sub label:active{transform:scale(.93)}
 .btns label:has(input:focus-visible),.mehr label:has(input:focus-visible),.sub label:has(input:focus-visible){outline:3px solid var(--ink)}
 #msg{font-size:11px;min-height:1.4em;text-align:center}
-#link{font-size:10px;word-break:break-all;text-align:center;user-select:all;-webkit-user-select:all}#link[hidden]{display:none}
 .form{display:flex;gap:8px;width:100%}.form[hidden]{display:none}
 .form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
 .form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--btn);color:#fff}
+/* Handy: alles auf einen Bildschirm, versteckte Felder wirklich verstecken */
+.form[hidden],.mehr[hidden]{display:none!important}
+html,body{height:auto;min-height:100%}
+body{min-height:100dvh}
+.egg{gap:8px;padding-block:10px}
+.lcd{width:min(100%,calc(38dvh*4/3))}
+.stats{gap:2px 8px}
+.btns label{aspect-ratio:auto;height:48px;border-radius:24px}
+.mehr{gap:6px}
+.mehr label{padding:6px 11px}
 </style>
 </head>
 <body>
@@ -46,17 +55,15 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--btn)}
   <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" aria-label="Lama streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
   <div id="msg">Hallo!</div>
   <form id="nameform" class="form" hidden><input id="nm" maxlength="12" placeholder="Wie soll ich heißen?" autocomplete="off" aria-label="Name"><button>Fertig</button></form>
-  <form id="grussform" class="form" hidden><input id="gr" maxlength="60" placeholder="Dein Gruß" autocomplete="off" aria-label="Gruß"><button>Link teilen</button></form>
-  <div id="link" hidden></div>
   <form id="erform" class="form" hidden><input id="ez" type="time" value="17:00" aria-label="Uhrzeit"><button>In den Kalender</button></form>
   <div class="stats" id="stats"></div>
   <div class="btns">
-    <label id="b-feed"><input type="checkbox" switch class="sw"><span>Heu</span></label><label id="b-play"><input type="checkbox" switch class="sw"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw"><span>Bürste</span></label>
+    <label id="b-feed"><input type="checkbox" switch class="sw"><span>Heu</span></label><label id="b-play"><input type="checkbox" switch class="sw"><span>Spiel</span></label><label id="b-sleep"><input type="checkbox" switch class="sw"><span>Schlaf</span></label><label id="b-clean"><input type="checkbox" switch class="sw"><span>Pflege</span></label>
   </div>
   <div class="sub" id="pflege"><label id="b-brush"><input type="checkbox" switch class="sw"><span>Bürsten</span></label><label id="b-color"><input type="checkbox" switch class="sw"><span>Fellfarbe</span></label></div>
   <div class="mehr">
     <label id="b-med"><input type="checkbox" switch class="sw"><span>Medizin</span></label>
-    <label id="g-spuck"><input type="checkbox" switch class="sw"><span>Zielspucken</span></label><label id="g-heu"><input type="checkbox" switch class="sw"><span>Heu fangen</span></label><label id="g-lauf"><input type="checkbox" switch class="sw"><span>Wettlauf</span></label><label id="b-decke"><input type="checkbox" switch class="sw"><span>Decken</span></label><label id="b-gruss"><input type="checkbox" switch class="sw"><span>Gruß</span></label><label id="b-erin"><input type="checkbox" switch class="sw"><span>Erinnerung</span></label>
+    <label id="g-spuck"><input type="checkbox" switch class="sw"><span>Zielspucken</span></label><label id="g-heu"><input type="checkbox" switch class="sw"><span>Heu fangen</span></label><label id="g-lauf"><input type="checkbox" switch class="sw"><span>Wettlauf</span></label><label id="b-decke"><input type="checkbox" switch class="sw"><span>Decken</span></label><label id="b-erin"><input type="checkbox" switch class="sw"><span>Erinnerung</span></label>
   </div>
 </div>
 
@@ -103,7 +110,7 @@ function tick(min){
 }
 function isNight(d){const h=d.getHours();return h>=21||h<7}
 function stage(){const d=(Date.now()-st.geb)/864e5;return d<1?'baby':d<4?'kind':'gross'}
-tick(Math.min(1440,(Date.now()-st.t)/60000));
+tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));
 // Wetter nach Jahreszeit: pro Stunde fest ausgewürfelt, damit es nicht ständig wechselt
 function weather(d){
   const m=d.getMonth(),r=((d.getFullYear()*400+m*31+d.getDate())*24+d.getHours())*2654435761%1000/1000;
@@ -343,6 +350,7 @@ setInterval(frame,150);
 
 // Handlungen
 function act(ch,txt,n,type,len){
+  if(game){say('Erst das Spiel zu Ende spielen!');return}
   if(st.ei){say(EI);return}
   if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
   for(const k in ch)st[k]=clamp(st[k]+ch[k]);
@@ -359,7 +367,7 @@ function showName(){$('name').textContent=nm().toUpperCase()}
 $('nameform').onsubmit=e=>{e.preventDefault();st.name=($('nm').value||'').trim().slice(0,12)||'Lama';$('nameform').hidden=true;showName();say(`Ich heiße jetzt ${st.name}!`);save()};
 $('b-feed').onclick=()=>act({satt:25,sauber:-5},'Mampf! Frisches Heu.',2,'eat',20);
 $('b-play').onclick=()=>st.krank&&!st.ei?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Hopp … Kopfball!',3,'play',26);
-$('b-sleep').onclick=()=>{if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-sleep').onclick=()=>{if(game)return say('Erst das Spiel zu Ende spielen!');if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
 // Bürste öffnet zwei Möglichkeiten: Bürsten oder Fellfarbe wechseln
 $('b-clean').onclick=()=>{if(st.ei)return say(EI);$('pflege').classList.toggle('on')};
 $('b-brush').onclick=()=>{$('pflege').classList.remove('on');if(!st.schlaf)st.poo=0;act({sauber:40},'Bürst, bürst – schön flauschig!',2,'clean',16)};
@@ -371,21 +379,7 @@ $('b-med').onclick=()=>{
 };
 $('b-decke').onclick=()=>{if(st.ei)return say(EI);nextDecke()};
 $('g-spuck').onclick=()=>startGame('spuck');$('g-heu').onclick=()=>startGame('heu');$('g-lauf').onclick=()=>startGame('lauf');
-// Gruß-Link: der Gruß steckt im Link selbst, kein Server nötig
-const grussLink=text=>location.origin+location.pathname+'?von='+encodeURIComponent(nm())+'&gruss='+encodeURIComponent(text);
-function toggle(id){for(const f of ['grussform','erform'])$(f).hidden=f===id?!$(f).hidden:true;$('link').hidden=true}
-$('b-gruss').onclick=()=>{if(st.ei)return say(EI);toggle('grussform');say('Schreib einen Gruß für dein Geschwisterchen!')};
-$('grussform').onsubmit=e=>{
-  e.preventDefault();const url=grussLink(($('gr').value||'').trim()||'Hallo!');
-  $('link').textContent=url;$('link').hidden=false;$('grussform').hidden=true;
-  if(navigator.share)navigator.share({title:`Gruß von ${nm()}`,url}).catch(()=>{});
-  else navigator.clipboard?.writeText(url).then(()=>say('Link kopiert! Jetzt in WhatsApp einfügen.'),()=>say('Link unten antippen und kopieren.'));
-};
-function grussLesen(){
-  const q=new URLSearchParams(location.search),g=q.get('gruss');if(!g)return;
-  if(!st.ei)start('wave',30);say(`${q.get('von')||'Jemand'} grüßt: ${g.slice(0,60)}`);
-  try{history.replaceState(null,'',location.pathname)}catch(e){}
-}
+function toggle(id){$(id).hidden=!$(id).hidden}
 // Erinnerung: tägliche Fütterungszeit als Kalendereintrag – kein Server nötig
 function ics(zeit,heute=new Date()){
   const [h,m]=zeit.split(':'),d=heute.getFullYear()+String(heute.getMonth()+1).padStart(2,'0')+String(heute.getDate()).padStart(2,'0'),n=nm();
@@ -396,10 +390,11 @@ function ics(zeit,heute=new Date()){
 $('b-erin').onclick=()=>{toggle('erform');say('Wann soll ich dich jeden Tag erinnern?')};
 $('erform').onsubmit=e=>{e.preventDefault();$('erform').hidden=true;say('Tipp auf „Hinzufügen“ im Kalender.');location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics($('ez').value||'17:00'))};
 // Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
-for(const id of ['pet','b-feed','b-play','b-sleep','b-clean','b-brush','b-color','b-med','g-spuck','g-heu','g-lauf','b-decke','b-gruss','b-erin']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
-setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();feierCheck();save()},30000);
+for(const id of ['pet','b-feed','b-play','b-sleep','b-clean','b-brush','b-color','b-med','g-spuck','g-heu','g-lauf','b-decke','b-erin']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName==='INPUT')return;if(game&&/^[bp]-/.test(id)&&!['b-ton','b-wach','b-sorry','b-erin'].includes(id))return say('Erst das Spiel zu Ende spielen!');fn(ev)}}
+setInterval(()=>{tick(.5);const m=mood();if(m&&!game)say(m);render();feierCheck();save()},30000);
 showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
 render();feierCheck();save();frame();{const m=mood();if(st.ei)say('Ein Heuhaufen! Tipp ihn an …');else if(m)say(m)}
-grussLesen();
+// Wenn die App aus dem Hintergrund zurückkommt: verpasste Zeit nachholen
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));render();save()});
 </script>
 </body></html>

@@ -37,6 +37,16 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
 .form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
 .form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--acc);color:#fff}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+/* Handy: alles auf einen Bildschirm, versteckte Felder wirklich verstecken */
+.form[hidden],.mehr[hidden]{display:none!important}
+html,body{height:auto;min-height:100%}
+body{min-height:100dvh}
+.egg{gap:8px;padding-block:10px}
+.lcd{width:min(100%,calc(38dvh*4/3))}
+.stats{gap:2px 8px}
+.btns label{aspect-ratio:auto;height:48px;border-radius:24px}
+.mehr{gap:6px}
+.mehr label{padding:6px 11px}
 </style>
 </head>
 <body>
@@ -53,7 +63,7 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
   <div class="mehr" id="spielwahl" hidden><label id="p-kraul"><input type="checkbox" switch class="sw" id="sw-kraul"><span>Kraulen</span></label><label id="p-ast"><input type="checkbox" switch class="sw" id="sw-ast"><span>Ast schaukeln</span></label></div>
   <div class="mehr">
     <label id="b-med"><input type="checkbox" switch class="sw" id="sw-med"><span>Medizin</span></label>
-    <label id="g-flucht"><input type="checkbox" switch class="sw" id="sw-flucht"><span>Feuerflucht</span></label><label id="g-blatt"><input type="checkbox" switch class="sw" id="sw-blatt"><span>Blätter fangen</span></label><label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Hüte</span></label>
+    <label id="g-flucht"><input type="checkbox" switch class="sw" id="sw-flucht"><span>Feuerflucht</span></label><label id="g-blatt"><input type="checkbox" switch class="sw" id="sw-blatt"><span>Blätter fangen</span></label><label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Verkleiden</span></label>
   </div>
 </div>
 
@@ -93,7 +103,7 @@ function tick(min){
   st.nacht=n;
   if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
 }
-tick(Math.min(1440,(Date.now()-st.t)/60000));
+tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));
 function isNight(d){const h=d.getHours();return h>=21||h<7}
 // Wetter im Busch: pro Stunde fest ausgewürfelt, meist trocken
 function weather(d){
@@ -152,7 +162,7 @@ function nextHat(){
   const fr=frei(st.punkte);
   if(!fr.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zur ${HATS[k].n}!`);return}
   const liste=['',...fr];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
-  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Hut.');save();
+  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Verkleidung.');save();
 }
 const EI='Erst muss der Koala aus dem Busch. Tipp drauf!';
 function canPlay(){
@@ -231,7 +241,7 @@ function frame(){
   if(!game)for(let i=0;i<st.poo;i++)sprite(KOT,1+i*4,21.8);
   if(game){drawGame();svg.innerHTML=out;return}
   if(!A&&!z){
-    if(f%3===0){cx+=dir;if(cx<1||cx>13)dir*=-1}
+    if(f%3===0){if(cx>13)cx=13;cx+=dir;if(cx<1||cx>13)dir*=-1}
     o.leg=(f>>1)&1;
     if(f%50===0&&Math.random()<.7){
       const k=!nacht&&wt!=='regen'&&Math.random()<.15?'feuer':['laptop','schnuppern','gaehnen','kratzen','turn'][Math.floor(Math.random()*5)];
@@ -298,6 +308,7 @@ setInterval(frame,150);
 
 // Handlungen
 function act(ch,txt,n,type,len){
+  if(game){say('Erst das Spiel zu Ende spielen!');return}
   if(st.ei){say(EI);return}
   if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
   if(anim?.type==='feuer'){say(`${nm()} ist gerade auf der Flucht!`);return}
@@ -317,7 +328,7 @@ $('b-feed').onclick=()=>{if(!st.ei&&!st.schlaf&&st.poo<3&&Math.random()<.4)st.po
 $('b-play').onclick=()=>{if(st.ei||st.schlaf)return act({},'',1);$('spielwahl').hidden=!$('spielwahl').hidden;if(!$('spielwahl').hidden)say('Kraulen oder am Ast schaukeln?')};
 $('p-kraul').onclick=()=>{$('spielwahl').hidden=true;act({laune:15,sauber:2},`${nm()} lässt sich kraulen …`,2,'kraul',28)};
 $('p-ast').onclick=()=>{$('spielwahl').hidden=true;st.krank?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Ab an den Ast!',3,'ast',28)};
-$('b-sleep').onclick=()=>{if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-sleep').onclick=()=>{if(game)return say('Erst das Spiel zu Ende spielen!');if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
 $('b-clean').onclick=()=>{if(!st.schlaf&&!st.ei)st.poo=0;act({sauber:40,laune:5},'Platsch! Eine Regendusche.',2,'clean',22)};
 $('b-med').onclick=()=>{
   if(st.ei||st.schlaf)return act({},'',1);
@@ -327,9 +338,11 @@ $('b-med').onclick=()=>{
 $('b-hut').onclick=()=>{if(st.ei)return say(EI);nextHat()};
 $('g-flucht').onclick=()=>startGame('flucht');$('g-blatt').onclick=()=>startGame('blatt');
 // Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
-for(const id of ['pet','b-feed','b-play','p-kraul','p-ast','b-sleep','b-clean','b-med','g-flucht','g-blatt','b-hut']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
-setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();save()},30000);
+for(const id of ['pet','b-feed','b-play','p-kraul','p-ast','b-sleep','b-clean','b-med','g-flucht','g-blatt','b-hut']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName==='INPUT')return;if(game&&/^[bp]-/.test(id)&&!['b-ton','b-wach','b-sorry','b-erin'].includes(id))return say('Erst das Spiel zu Ende spielen!');fn(ev)}}
+setInterval(()=>{tick(.5);const m=mood();if(m&&!game)say(m);render();save()},30000);
 showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
 render();save();frame();{const m=mood();if(st.ei)say('Ein Eukalyptusbusch! Tipp ihn an …');else if(m)say(m)}
+// Wenn die App aus dem Hintergrund zurückkommt: verpasste Zeit nachholen
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));render();save()});
 </script>
 </body></html>

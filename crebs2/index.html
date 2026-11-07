@@ -35,8 +35,17 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--crab)}
 .form{display:flex;gap:8px;width:100%}.form[hidden]{display:none}
 .form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
 .form input[type=time]{flex:0 1 auto}
-#link{font-size:10px;word-break:break-all;text-align:center;user-select:all;-webkit-user-select:all}
 .form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--crab);color:#fff}
+/* Handy: alles auf einen Bildschirm, versteckte Felder wirklich verstecken */
+.form[hidden],.mehr[hidden]{display:none!important}
+html,body{height:auto;min-height:100%}
+body{min-height:100dvh}
+.egg{gap:8px;padding-block:10px}
+.lcd{width:min(100%,calc(38dvh*4/3))}
+.stats{gap:2px 8px}
+.btns label{aspect-ratio:auto;height:48px;border-radius:24px}
+.mehr{gap:6px}
+.mehr label{padding:6px 11px}
 </style>
 
 </head>
@@ -45,8 +54,6 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--crab)}
   <h1 id="name">CREBS II</h1>
   <div class="lcd"><label class="tap" id="pet"><input type="checkbox" switch class="sw" aria-label="Crebs streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></label></div>
   <div id="msg">Hallo! Ich bin Crebs.</div>
-  <form id="grussform" class="form" hidden><input id="gr" maxlength="60" placeholder="Dein Gruß" autocomplete="off" aria-label="Gruß"><button>Link teilen</button></form>
-  <div id="link" hidden></div>
   <form id="erform" class="form" hidden><input id="ez" type="time" value="17:00" aria-label="Uhrzeit"><button>In den Kalender</button></form>
   <form id="nameform" class="form" hidden><input id="nm" maxlength="12" placeholder="Wie soll ich heißen?" autocomplete="off" aria-label="Name"><button>Fertig</button></form>
   <div class="stats" id="stats"></div>
@@ -55,7 +62,7 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--crab)}
   </div>
   <div class="mehr">
     <label id="b-med"><input type="checkbox" switch class="sw"><span>Medizin</span></label>
-    <label id="g-ball"><input type="checkbox" switch class="sw"><span>Ballspiel</span></label><label id="g-fisch"><input type="checkbox" switch class="sw"><span>Fische fangen</span></label><label id="g-rennen"><input type="checkbox" switch class="sw"><span>Wettrennen</span></label><label id="b-hut"><input type="checkbox" switch class="sw"><span>Hüte</span></label><label id="b-gruss"><input type="checkbox" switch class="sw"><span>Gruß</span></label><label id="b-erin"><input type="checkbox" switch class="sw"><span>Erinnerung</span></label>
+    <label id="g-ball"><input type="checkbox" switch class="sw"><span>Ballspiel</span></label><label id="g-fisch"><input type="checkbox" switch class="sw"><span>Fische fangen</span></label><label id="g-rennen"><input type="checkbox" switch class="sw"><span>Wettrennen</span></label><label id="b-hut"><input type="checkbox" switch class="sw"><span>Verkleiden</span></label><label id="b-erin"><input type="checkbox" switch class="sw"><span>Erinnerung</span></label>
   </div>
 </div>
 
@@ -100,7 +107,7 @@ function tick(min){
   st.nacht=n;
   if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
 }
-tick(Math.min(1440,(Date.now()-st.t)/60000));
+tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));
 function isNight(d){const h=d.getHours();return h>=21||h<7}
 // Wetter nach Jahreszeit (R4): pro Stunde fest ausgewürfelt, damit es nicht ständig wechselt
 function weather(d){
@@ -177,7 +184,7 @@ function nextHat(){
   const f=frei(st.punkte);
   if(!f.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zur ${HATS[k].n}!`);return}
   const liste=['',...f];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
-  say(st.hut?`Schick! Die ${HATS[st.hut].n}.`:'Ohne Hut.');save();
+  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Verkleidung.');save();
 }
 function canPlay(){
   if(st.ei){say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');return false}
@@ -193,7 +200,7 @@ function newRound(){Object.assign(game,{bx:31,by:17,hit:false,fx:3+Math.random()
 function endGame(){
   const g=game;game=null;const pts=g.type==='rennen'?(g.win?10:3):g.score;
   const vorher=frei(st.punkte).length;st.punkte+=pts;const neu=frei(st.punkte);st.laune=clamp(st.laune+10+pts*2);st.energie=clamp(st.energie-10);
-  buzz(3);say(`Spiel vorbei: ${pts} Punkte!`+(g.type==='rennen'?(g.win?' Gewonnen!':' Knapp verloren!'):'')+(neu.length>vorher?` Neuer Hut: ${HATS[neu[neu.length-1]].n}!`:''));render();save();
+  buzz(3);say(`Spiel vorbei: ${pts} Punkte!`+(g.type==='rennen'?(g.win?' Gewonnen!':' Knapp verloren!'):'')+(neu.length>vorher?` Neu: ${HATS[neu[neu.length-1]].n}!`:''));render();save();
 }
 function gameTap(ev){
   const g=game;
@@ -272,7 +279,7 @@ function frame(){
     case'wave':{o.armL=t%4<2?2:3;o.armR=t%4<2?3:2;o.turn=Math.sin(t*.3)*.3;break}
     case'pet':{o.armL=o.armR=2;o.zu=true;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,cx+4,9-t*.6);break}
     case'laptop':{ // tippen: Ärmchen abwechselnd auf der Tastatur
-      o.armL=f%2?3:4;o.armR=f%2?4:3;y=13;tock();
+      o.armL=f%2?3:4;o.armR=f%2?4:3;y=13;if(f%2)tock();
       after=()=>{px(cx+2,17,'ink',9,3);px(cx+3,17.7,'sky',7,1.6);px(cx+6,18,'crab');px(cx+1,20,'ink',11,.7)};
       if(t===A.len-1)say('Fertig getippt!');
       break}
@@ -301,6 +308,7 @@ setInterval(frame,150);
 
 // Handlungen
 function act(ch,txt,n,type,len){
+  if(game){say('Erst das Spiel zu Ende spielen!');return}
   if(st.ei){say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');return}
   if(st.schlaf){say('Pssst, Crebs schläft.');return}
   for(const k in ch)st[k]=clamp(st[k]+ch[k]);
@@ -319,7 +327,7 @@ function askName(){$('nameform').hidden=false}
 $('nameform').onsubmit=e=>{e.preventDefault();st.name=($('nm').value||'').trim().slice(0,12)||'Crebs';$('nameform').hidden=true;showName();say(`Ich heiße jetzt ${st.name}!`);save()};
 $('b-feed').onclick=()=>act({satt:25,sauber:-5},'Mampf! Ein Fisch.',2,'eat',16);
 $('b-play').onclick=()=>st.krank&&!st.ei?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Fang! … und weg damit!',3,'play',26);
-$('b-sleep').onclick=()=>{st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-sleep').onclick=()=>{if(game)return say('Erst das Spiel zu Ende spielen!');if(st.ei)return say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
 $('b-clean').onclick=()=>{if(!st.schlaf)st.poo=0;act({sauber:40},'Blubb, blitzblank!',2,'clean',16)};
 // Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
 $('b-med').onclick=()=>{
@@ -328,21 +336,7 @@ $('b-med').onclick=()=>{
   st.krank=false;st.krankMin=0;act({laune:10},'Bäh! … Aber jetzt geht es mir besser!',2,'med',16);
 };
 $('b-hut').onclick=()=>{if(st.ei)return say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');nextHat()};
-// Gruß-Link (R9): der Gruß steckt im Link selbst, kein Server nötig
-const grussLink=text=>location.origin+location.pathname+'?von='+encodeURIComponent(st.name||'Crebs')+'&gruss='+encodeURIComponent(text);
-function toggle(id){for(const f of ['grussform','erform'])$(f).hidden=f===id?!$(f).hidden:true;$('link').hidden=true}
-$('b-gruss').onclick=()=>{if(st.ei)return say('Erst muss Crebs schlüpfen. Tipp aufs Ei!');toggle('grussform');say('Schreib einen Gruß für dein Geschwisterchen!')};
-$('grussform').onsubmit=e=>{
-  e.preventDefault();const url=grussLink(($('gr').value||'').trim()||'Hallo!');
-  $('link').textContent=url;$('link').hidden=false;$('grussform').hidden=true;
-  if(navigator.share)navigator.share({title:`Gruß von ${st.name||'Crebs'}`,url}).catch(()=>{});
-  else navigator.clipboard?.writeText(url).then(()=>say('Link kopiert! Jetzt in WhatsApp einfügen.'),()=>say('Link unten antippen und kopieren.'));
-};
-function grussLesen(){
-  const q=new URLSearchParams(location.search),g=q.get('gruss');if(!g)return;
-  if(!st.ei)start('wave',30);say(`${q.get('von')||'Jemand'} grüßt: ${g.slice(0,60)}`);
-  try{history.replaceState(null,'',location.pathname)}catch(e){}
-}
+function toggle(id){$(id).hidden=!$(id).hidden}
 // Erinnerung (R10): tägliche Fütterungszeit als Kalendereintrag – kein Server nötig
 function ics(zeit,heute=new Date()){
   const [h,m]=zeit.split(':'),d=heute.getFullYear()+String(heute.getMonth()+1).padStart(2,'0')+String(heute.getDate()).padStart(2,'0'),n=st.name||'Crebs';
@@ -353,10 +347,11 @@ function ics(zeit,heute=new Date()){
 $('b-erin').onclick=()=>{toggle('erform');say('Wann soll ich dich jeden Tag erinnern?')};
 $('erform').onsubmit=e=>{e.preventDefault();$('erform').hidden=true;say('Tipp auf „Hinzufügen“ im Kalender.');location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics($('ez').value||'17:00'))};
 $('g-ball').onclick=()=>startGame('ball');$('g-fisch').onclick=()=>startGame('fisch');$('g-rennen').onclick=()=>startGame('rennen');
-for(const id of ['pet','b-feed','b-play','b-sleep','b-clean','b-med','g-ball','g-fisch','g-rennen','b-hut','b-gruss','b-erin']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
-setInterval(()=>{tick(.5);const m=mood();if(m)say(m);render();feierCheck();save()},30000);
+for(const id of ['pet','b-feed','b-play','b-sleep','b-clean','b-med','g-ball','g-fisch','g-rennen','b-hut','b-erin']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName==='INPUT')return;if(game&&/^[bp]-/.test(id)&&!['b-ton','b-wach','b-sorry','b-erin'].includes(id))return say('Erst das Spiel zu Ende spielen!');fn(ev)}}
+setInterval(()=>{tick(.5);const m=mood();if(m&&!game)say(m);render();feierCheck();save()},30000);
 showName();if(!st.ei&&!st.name)askName();
 render();feierCheck();save();frame();{const m=mood();if(st.ei)say('Ein Ei! Tipp es an …');else if(m)say(m)}
-grussLesen();
+// Wenn die App aus dem Hintergrund zurückkommt: verpasste Zeit nachholen
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));render();save()});
 </script>
 </body></html>
