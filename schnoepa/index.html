@@ -37,6 +37,16 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
 .form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
 .form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--acc);color:#fff}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+/* Handy: alles auf einen Bildschirm, versteckte Felder wirklich verstecken */
+.form[hidden],.mehr[hidden]{display:none!important}
+html,body{height:auto;min-height:100%}
+body{min-height:100dvh}
+.egg{gap:8px;padding-block:10px}
+.lcd{width:min(100%,calc(38dvh*4/3))}
+.stats{gap:2px 8px}
+.btns label{aspect-ratio:auto;height:48px;border-radius:24px}
+.mehr{gap:6px}
+.mehr label{padding:6px 11px}
 </style>
 </head>
 <body>
@@ -59,7 +69,7 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
     <label id="g-wecken"><input type="checkbox" switch class="sw" id="sw-wecken"><span>Schlafmützen wecken</span></label>
     <label id="b-scher"><input type="checkbox" switch class="sw" id="sw-scher"><span>Scheren</span></label>
     <label id="b-wecker"><input type="checkbox" switch class="sw" id="sw-wecker"><span>Böp-Wecker</span></label>
-    <label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Hüte</span></label>
+    <label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Verkleiden</span></label>
     <label id="b-ton"><input type="checkbox" switch class="sw" id="sw-ton"><span>Ton an</span></label>
   </div>
 </div>
@@ -113,7 +123,7 @@ function tick(min){
   st.nacht=n;
   if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
 }
-tick(Math.min(1440,(Date.now()-st.t)/60000));
+tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));
 function isNight(d){const h=d.getHours();return h>=21||h<7}
 function weather(d){const r=((d.getFullYear()*400+d.getMonth()*31+d.getDate())*24+d.getHours())*2654435761%1000/1000;return r<.2?'regen':'klar'}
 function stage(){const d=(Date.now()-st.geb)/864e5;return d<1?'baby':d<4?'kind':'gross'}
@@ -170,7 +180,7 @@ function nextHat(){
   const fr=frei(st.punkte);
   if(!fr.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zur ${HATS[k].n}!`);return}
   const liste=['',...fr];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
-  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Hut.');save();
+  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Verkleidung.');save();
 }
 const EI='Erst muss das Schaf aus dem Wollknäuel. Tipp drauf!';
 function canPlay(){
@@ -323,6 +333,7 @@ setInterval(frame,150);
 
 // Handlungen
 function act(ch,txt_,n,type,len,trotzig){
+  if(game){say('Erst das Spiel zu Ende spielen!');return}
   if(st.ei){say(EI);return}
   if(wecker){say('BÖP! Erst „Ich bin wach!“ drücken!');return}
   if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
@@ -355,7 +366,7 @@ $('b-feed').onclick=()=>{if(!st.ei&&!st.schlaf&&st.poo<3&&Math.random()<.4)st.po
 $('b-play').onclick=()=>{if(st.ei||st.schlaf||sauer()||wecker)return act({},'',1);$('spielwahl').hidden=!$('spielwahl').hidden;if(!$('spielwahl').hidden)say('Kraulen oder hüpfen?')};
 $('p-kraul').onclick=()=>{$('spielwahl').hidden=true;act({laune:15,sauber:2},`${nm()} lässt sich kraulen …`,2,'kraul',28)};
 $('p-huepf').onclick=()=>{$('spielwahl').hidden=true;st.krank?(buzz(1),say('Mir geht es nicht gut zum Hüpfen …')):act({laune:20,energie:-10,satt:-5},'Hops! Hops! Wer zuerst müde wird, hat verloren!',3,'huepf',30)};
-$('b-sleep').onclick=()=>{
+$('b-sleep').onclick=()=>{if(game)return say('Erst das Spiel zu Ende spielen!');
   if(st.ei)return say(EI);if(wecker)return say('Schlafen? Jetzt? BÖP!');
   if(st.schlaf){st.schlaf=false;anim=null;render();return schnapp(3,'Du hast mich geweckt!! Andere wecken: ja. Selbst geweckt werden: NIE. Pff!')}
   if(sauer())return act({},'',1);
@@ -365,26 +376,28 @@ $('b-scher').onclick=()=>{
   if(st.ei)return say(EI);if(st.schlaf||wecker)return act({},'',1);
   if(sauer())return say('Pff. Finger weg von meiner Wolle!');
   if(st.wolle<40){buzz(1);return say('Da ist doch gar keine Wolle mehr dran!')}
-  st.wolle=0;start('scher',26);buzz(2);render();save();
-  setTimeout(()=>schnapp(3,'Meine schöne Wolle!! Ich bin nackig! Pff!'),3900);
+  st.wolle=0;start('scher',26);buzz(2);say('Schnipp, schnapp!');render();save();
+  setTimeout(()=>{if(!game&&!wecker&&!st.schlaf)schnapp(3,'Meine schöne Wolle!! Ich bin nackig! Pff!')},3900);
 };
 $('b-med').onclick=()=>{
-  if(st.ei||st.schlaf)return act({},'',1);
+  if(st.ei||st.schlaf||wecker)return act({},'',1);
   if(!st.krank){buzz(1);say('Ich bin doch gesund! Bäh!');return}
   st.krank=false;st.krankMin=0;act({laune:10},'Bäh! … Aber jetzt geht es mir besser!',2,'med',16,true);
 };
-$('b-hut').onclick=()=>{if(st.ei)return say(EI);if(sauer())return say('Pff. Kein Hut der Welt hilft jetzt.');nextHat()};
+$('b-hut').onclick=()=>{if(st.ei)return say(EI);if(sauer())return say('Pff. Keine Verkleidung hilft jetzt.');nextHat()};
 $('b-ton').onclick=()=>{st.ton=!st.ton;audio();if(st.ton)boep(1);render();save()};
 $('b-wecker').onclick=()=>{audio();if(st.ei)return say(EI);if(wecker)return;if(sauer())return say('Pff. Nicht mal böpen will ich jetzt.');weckerAn(true)};
 $('b-wach').onclick=()=>{audio();weckerAus()};
 $('b-sorry').onclick=()=>{audio();sorry()};
 $('g-wecken').onclick=()=>{audio();startGame()};
 // Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
-for(const id of ['pet','b-feed','b-play','p-kraul','p-huepf','b-sleep','b-clean','b-scher','b-med','g-wecken','b-wecker','b-wach','b-sorry','b-hut','b-ton']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
+for(const id of ['pet','b-feed','b-play','p-kraul','p-huepf','b-sleep','b-clean','b-scher','b-med','g-wecken','b-wecker','b-wach','b-sorry','b-hut','b-ton']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName==='INPUT')return;if(game&&/^[bp]-/.test(id)&&!['b-ton','b-wach','b-sorry','b-erin'].includes(id))return say('Erst das Spiel zu Ende spielen!');fn(ev)}}
 setInterval(()=>{tick(.5);if(!game&&!wecker){const m=mood();if(m)say(m)}render();save()},30000);
 // Eingeschnapptsein endet von selbst
 setInterval(()=>{if(st.bis&&!sauer()){st.bis=0;say('Na gut, ich rede wieder mit dir.');render();save()}},5000);
 showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
 render();save();frame();{const m=mood();if(st.ei)say('Ein rosa Wollknäuel! Tipp es an …');else if(m&&!wecker)say(m)}
+// Wenn die App aus dem Hintergrund zurückkommt: verpasste Zeit nachholen
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));render();save()});
 </script>
 </body></html>

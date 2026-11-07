@@ -36,6 +36,16 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
 .form input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--bg);color:var(--fg)}
 .form button{font:inherit;font-size:11px;padding:0 14px;border:0;border-radius:10px;background:var(--acc);color:#fff}
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+/* Handy: alles auf einen Bildschirm, versteckte Felder wirklich verstecken */
+.form[hidden],.mehr[hidden]{display:none!important}
+html,body{height:auto;min-height:100%}
+body{min-height:100dvh}
+.egg{gap:8px;padding-block:10px}
+.lcd{width:min(100%,calc(38dvh*4/3))}
+.stats{gap:2px 8px}
+.btns label{aspect-ratio:auto;height:48px;border-radius:24px}
+.mehr{gap:6px}
+.mehr label{padding:6px 11px}
 </style>
 </head>
 <body>
@@ -51,7 +61,7 @@ h1{margin:0;font-size:18px;letter-spacing:.15em;color:var(--acc)}
   <div class="mehr" id="spielwahl" hidden><label id="p-kraul"><input type="checkbox" switch class="sw" id="sw-kraul"><span>Kraulen</span></label><label id="p-zapfen"><input type="checkbox" switch class="sw" id="sw-zapfen"><span>Tannenzapfen</span></label></div>
   <div class="mehr">
     <label id="b-med"><input type="checkbox" switch class="sw" id="sw-med"><span>Medizin</span></label>
-    <label id="g-jagd"><input type="checkbox" switch class="sw" id="sw-jagd"><span>Hirschjagd</span></label><label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Hüte</span></label>
+    <label id="g-jagd"><input type="checkbox" switch class="sw" id="sw-jagd"><span>Hirschjagd</span></label><label id="g-hase"><input type="checkbox" switch class="sw" id="sw-hase"><span>Hasenjagd</span></label><label id="g-kletter"><input type="checkbox" switch class="sw" id="sw-kletter"><span>Klettern</span></label><label id="b-hut"><input type="checkbox" switch class="sw" id="sw-hut"><span>Verkleiden</span></label>
   </div>
 </div>
 
@@ -93,7 +103,7 @@ function tick(min){
   st.nacht=n;
   if(z&&!n&&st.energie>=100){st.schlaf=false;say('Ausgeschlafen!')}
 }
-tick(Math.min(1440,(Date.now()-st.t)/60000));
+tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));
 function isNight(d){const h=d.getHours();return h>=21||h<7}
 // Bergwetter: pro Stunde fest ausgewürfelt, im Winter Schnee statt Regen
 function weather(d){
@@ -160,7 +170,7 @@ function nextHat(){
   const fr=frei(st.punkte);
   if(!fr.length){const k=Object.keys(HATS)[0];buzz(1);say(`Noch ${HATS[k].p-st.punkte} Punkte bis zum ${HATS[k].n}!`);return}
   const liste=['',...fr];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
-  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Hut.');save();
+  say(st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Verkleidung.');save();
 }
 const EI='Erst muss der Puma aus der Höhle. Tipp drauf!';
 function canPlay(){
@@ -174,8 +184,46 @@ function canPlay(){
 const GS=.7,GX=-3,RUNDEN=6;
 function startGame(type){
   if(game||!canPlay())return;anim=null;$('spielwahl').hidden=true;
-  game={type,t:0,score:0,n:0};newDeer();
-  say('Finger auf die Wiese, nach hinten ziehen, dann nach vorne schieben!');
+  game={type,t:0,score:0,n:0};
+  if(type==='hase'){Object.assign(game,{loch:-1,st:'warten',wt:6});say('Tipp auf das Loch, aus dem der Hase guckt!')}
+  else if(type==='klettern'){Object.assign(game,{h:0,rest:KZ,los:false,tc:0,tap:0});say(`Tipp ganz schnell, dann klettert ${nm()} die Tanne hoch!`)}
+  else{newDeer();say('Finger auf die Wiese, nach hinten ziehen, dann nach vorne schieben!')}
+}
+// Minispiel Hasenjagd: ein Hase guckt aus einem von drei Löchern – schnell drauftippen
+const HASEN=10,LX=[5,16,27],HASE=[".I.I.",".Y.Y.","YYYYY","YDYYY","YYYYI"];
+// Minispiel Klettern: so schnell wie möglich tippen, der Puma klettert die Tanne hoch (10 Sekunden)
+const KZ=67;
+function gameTap(p){
+  const g=game;
+  if(g.type==='hase'){
+    if(g.st!=='oben')return;
+    const i=LX.findIndex(x=>Math.abs(p.x-x)<5.5);
+    if(i===g.loch){g.score++;g.st='treffer';g.ht=0;buzz(2);say(`Erwischt! ${g.score}`)}else{tock();say('Daneben!')}
+  }
+  if(g.type==='klettern'){
+    if(g.rest<=0)return;
+    if(!g.los){g.los=true;say('Los, hoch!')}
+    g.h+=.5;g.tc++;g.tap=1;tock();
+    if(g.h%10===0)say(`${g.h} Meter!`);
+  }
+}
+function drawHase(g){
+  for(const x of LX)out+=`<ellipse cx="${x}" cy="21.4" rx="3" ry="1" fill="var(--night)"/>`;
+  if(g.st==='warten'){if(--g.wt<=0){if(g.n>=HASEN)return endGame();g.loch=Math.floor(Math.random()*3);g.st='oben';g.ot=0;g.dauer=Math.max(7,15-g.n)}}
+  else if(g.st==='oben'){g.ot++;sprite(HASE,LX[g.loch]-2,16+(g.ot<2?2:0));if(g.ot>=g.dauer){g.st='warten';g.wt=4;g.n++;say('Weg ist er!')}}
+  if(g.st==='treffer'){g.ht++;puma(LX[g.loch]-14,10,{sc:.6,mampf:g.ht%2,zu:g.ht%4<2});sprite(HEART,LX[g.loch]-2,13-g.ht*.4);if(g.ht>=8){g.st='warten';g.wt=4;g.n++}}
+  else{out+=`<path d="M-1 8.6 L10 8.6 L8 12 L-1 12Z" fill="var(--fels)" stroke="var(--edge)" stroke-width=".25"/>`;puma(-3,-1.4,{sc:.45,sy:.85,tail:f%6<3,zu:false})}
+  out+=`<text x="23" y="3" font-size="2.4" fill="var(--ink)" font-family="var(--font)">${g.score}/${HASEN}</text>`;
+}
+function drawKlettern(g){
+  if(g.los&&--g.rest<=0)return endGame();
+  const off=g.h*1.6;
+  px(14.5,0,'stamm',3,24);
+  for(let k=0;k<6;k++){const yy=((k*5+off)%30)-4,l=k%2;out+=`<path d="M${l?14.5:17.5} ${yy} L${l?7:25} ${yy+2.6} L${l?14.5:17.5} ${yy+1.2}Z" fill="var(--tanne)"/>`}
+  puma(8,2-(g.tap>0?.5:0),{sc:.6,rot:-80,leg:g.tc%2,tail:f%4<2,zu:false});
+  if(g.tap>0)g.tap--;
+  px(1,1,'edge',30*g.rest/KZ,.7);
+  out+=`<text x="1" y="4.6" font-size="2.4" fill="var(--ink)" font-family="var(--font)">${Math.floor(g.h)} m</text>`;
 }
 function newDeer(){Object.assign(game,{dx:17+Math.random()*6,gt:Math.floor(Math.random()*30),phase:'ziel',back:0,maxBack:0,px:GX,jy:0,rot:0,lt:0,hit:false,scheu:false,fx:0})}
 function svgPt(e){const r=svg.getBoundingClientRect();return{x:(e.clientX-r.left)/r.width*32,y:(e.clientY-r.top)/r.height*24}}
@@ -185,7 +233,9 @@ function leap(p){
   if(g.scheu)say('Der Hirsch hat dich gesehen!');
 }
 $('pet').addEventListener('pointerdown',e=>{
-  const g=game;if(!g||g.phase!=='ziel')return;
+  const g=game;if(!g)return;
+  if(g.type!=='jagd'){e.preventDefault();return gameTap(svgPt(e))}
+  if(g.phase!=='ziel')return;
   e.preventDefault();g.phase='ziehen';g.sx=svgPt(e).x;g.back=0;g.maxBack=0;
   try{$('pet').setPointerCapture(e.pointerId)}catch(_){}
 });
@@ -199,13 +249,16 @@ $('pet').addEventListener('pointermove',e=>{
 function loslassen(){const g=game;if(!g||g.phase!=='ziehen')return;g.phase='ziel';say(g.maxBack<1.5?'Weiter nach hinten ziehen …':'… und dann nach vorne schieben!');g.back=0;g.maxBack=0}
 $('pet').addEventListener('pointerup',loslassen);$('pet').addEventListener('pointercancel',loslassen);
 function endGame(){
-  const g=game;game=null;const pts=g.score;
+  const g=game;game=null;const pts=g.type==='klettern'?Math.min(10,Math.floor(g.h/3)):g.score;
   const vorher=frei(st.punkte).length;st.punkte+=pts*2;const neu=frei(st.punkte);
-  st.laune=clamp(st.laune+10+pts*3);st.energie=clamp(st.energie-12);st.satt=clamp(st.satt+pts*8);
-  buzz(3);say(`Jagd vorbei: ${pts} von ${RUNDEN} Hirschen!`+(neu.length>vorher?` Neu: ${HATS[neu[neu.length-1]].n}!`:''));render();save();
+  st.laune=clamp(st.laune+10+pts*3);st.energie=clamp(st.energie-12);if(g.type!=='klettern')st.satt=clamp(st.satt+pts*(g.type==='hase'?4:8));
+  const txt={jagd:`Jagd vorbei: ${pts} von ${RUNDEN} Hirschen!`,hase:`Hasenjagd vorbei: ${pts} von ${HASEN} Hasen!`,klettern:`${Math.floor(g.h)} Meter hoch geklettert! ${pts} Punkte.`}[g.type];
+  buzz(3);say(txt+(neu.length>vorher?` Neu: ${HATS[neu[neu.length-1]].n}!`:''));render();save();
 }
 function drawGame(){
   const g=game;g.t++;
+  if(g.type==='hase')return drawHase(g);
+  if(g.type==='klettern')return drawKlettern(g);
   const front=x=>x+8+8*GS;
   if(g.phase==='ziel'||g.phase==='ziehen'){
     g.gt++;g.dx=Math.max(15,Math.min(23,g.dx+Math.sin(g.t*.07)*.05));
@@ -337,6 +390,7 @@ setInterval(frame,150);
 
 // Handlungen
 function act(ch,txt,n,type,len){
+  if(game){say('Erst das Spiel zu Ende spielen!');return}
   if(st.ei){say(EI);return}
   if(st.schlaf){say(`Pssst, ${nm()} schläft.`);return}
   for(const k in ch)st[k]=clamp(st[k]+ch[k]);
@@ -355,7 +409,7 @@ $('b-feed').onclick=()=>{if(!st.ei&&!st.schlaf&&st.poo<3&&Math.random()<.4)st.po
 $('b-play').onclick=()=>{if(st.ei||st.schlaf)return act({},'',1);$('spielwahl').hidden=!$('spielwahl').hidden;if(!$('spielwahl').hidden)say('Kraulen oder Tannenzapfen?')};
 $('p-kraul').onclick=()=>{$('spielwahl').hidden=true;if(!st.ei&&!st.schlaf)purr(14);act({laune:15,sauber:2},`${nm()} lässt sich kraulen …`,1,'kraul',30)};
 $('p-zapfen').onclick=()=>{$('spielwahl').hidden=true;st.krank?(buzz(1),say('Mir geht es nicht gut zum Spielen …')):act({laune:20,energie:-10,satt:-5},'Ein Tannenzapfen! Tatze drauf!',3,'zapfen',28)};
-$('b-sleep').onclick=()=>{if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
+$('b-sleep').onclick=()=>{if(game)return say('Erst das Spiel zu Ende spielen!');if(st.ei)return say(EI);st.schlaf=!st.schlaf;anim=null;buzz(st.schlaf?1:2,150);say(st.schlaf?'Zzz …':'Guten Morgen!');render();save()};
 $('b-clean').onclick=()=>{if(!st.schlaf&&!st.ei)st.poo=0;act({sauber:40,laune:5},'Schleck, schleck – Fell putzen wie eine Katze.',2,'clean',24)};
 $('b-med').onclick=()=>{
   if(st.ei||st.schlaf)return act({},'',1);
@@ -364,10 +418,14 @@ $('b-med').onclick=()=>{
 };
 $('b-hut').onclick=()=>{if(st.ei)return say(EI);nextHat()};
 $('g-jagd').onclick=()=>startGame('jagd');
+$('g-hase').onclick=()=>startGame('hase');
+$('g-kletter').onclick=()=>startGame('klettern');
 // Klick aufs Label erzeugt zusätzlich einen Klick aufs Schalter-Feld – nur einmal reagieren
-for(const id of ['pet','b-feed','b-play','p-kraul','p-zapfen','b-sleep','b-clean','b-med','g-jagd','b-hut']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName!=='INPUT')fn(ev)}}
+for(const id of ['pet','b-feed','b-play','p-kraul','p-zapfen','b-sleep','b-clean','b-med','g-jagd','g-hase','g-kletter','b-hut']){const e=$(id),fn=e.onclick;e.onclick=ev=>{if(ev.target.tagName==='INPUT')return;if(game&&/^[bp]-/.test(id)&&!['b-ton','b-wach','b-sorry','b-erin'].includes(id))return say('Erst das Spiel zu Ende spielen!');fn(ev)}}
 setInterval(()=>{tick(.5);const m=mood();if(m&&!game)say(m);render();save()},30000);
 showName();if(!st.ei&&!st.name)$('nameform').hidden=false;
 render();save();frame();{const m=mood();if(st.ei)say('Eine Felsenhöhle in den Bergen! Tipp sie an …');else if(m)say(m)}
+// Wenn die App aus dem Hintergrund zurückkommt: verpasste Zeit nachholen
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;tick(Math.max(0,Math.min(1440,(Date.now()-st.t)/60000)));render();save()});
 </script>
 </body></html>
