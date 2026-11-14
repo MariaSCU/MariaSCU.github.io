@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Englisch-Eisbär">
+<meta name="theme-color" content="#3a8cc4">
+<title>Englisch-Eisbär</title>
+<link rel="stylesheet" href="../fonts/silkscreen.css">
+<style>
+*{box-sizing:border-box}body{margin:0}:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+/* Gleiche Farben und Pixel-Look wie das Polar-Gotchi */
+:root{--bg:#f2f6fa;--fg:#22262c;--sky:#d7ebf7;--sun:#f2c14e;--cloud:#ffffff;--ink:#2f333a;--line:#b9cad8;--eye:#1d1d1f;--btn:#3a8cc4;--bear:#ffffff;--bear2:#dce6ee;--edge:#8ea5b9;--ice:#eef6fb;--water:#4f8fc0;--snow:#ffffff;--blass:#efe6c4;--rot:#d9534f;--rosa:#f2b8c6;--schnauze:#efe8d8;--card:#ffffff;--ok:#3f9a54;--bad:#d9534f;--okbg:#e3f3e6;--badbg:#fbe5e4;--font:"Silkscreen",ui-monospace,monospace;--text:system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12151b;--fg:#e4e6ea;--sky:#1a2433;--sun:#e9e4c9;--cloud:#2f3a4c;--ink:#d5d9e0;--line:#2f3a4c;--ice:#c7d5e1;--card:#1c2029;--okbg:#1f3526;--badbg:#3a2224;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12151b;--fg:#e4e6ea;--sky:#1a2433;--sun:#e9e4c9;--cloud:#2f3a4c;--ink:#d5d9e0;--line:#2f3a4c;--ice:#c7d5e1;--card:#1c2029;--okbg:#1f3526;--badbg:#3a2224;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);min-height:100dvh;display:grid;justify-items:center;padding-inline:16px}
+.app{width:min(380px,100%);display:grid;gap:8px;justify-items:center;padding-block:10px;align-content:start}
+h1{margin:0;font-size:16px;letter-spacing:.12em;color:var(--btn)}
+.lcd{width:min(100%,calc(28dvh*4/3));background:var(--sky);border-radius:16px;overflow:hidden;cursor:pointer}
+#scene{width:100%;display:block;shape-rendering:crispEdges}
+#msg{font-size:10px;min-height:1.3em;text-align:center}
+.stats{width:100%;display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;font-size:9px;align-items:center}
+.bar{height:8px;border:2px solid var(--ink);background:var(--bg)}.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.card{width:100%;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px;display:grid;gap:10px}
+.tag{font-size:9px;color:var(--btn);letter-spacing:.05em}
+.frage{font-family:var(--text);font-size:21px;line-height:1.3;font-weight:600}
+.frage .hint{display:block;font-size:15px;font-weight:400;opacity:.7;margin-top:2px}
+.frage .luecke{display:inline-block;min-width:2.6em;border-bottom:3px solid var(--btn);text-align:center}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opts button{font-family:var(--text);font-size:19px;font-weight:600;padding:14px 6px;border-radius:14px;border:2px solid var(--btn);background:var(--bg);color:var(--fg);cursor:pointer;touch-action:manipulation}
+.opts button.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.opts button.bad{background:var(--bad);border-color:var(--bad);color:#fff;opacity:.85}
+.opts button:disabled{cursor:default}
+.erkl{font-family:var(--text);font-size:15px;line-height:1.4;border-radius:12px;padding:10px 12px}
+.erkl.ok{background:var(--okbg)}.erkl.bad{background:var(--badbg)}
+.erkl[hidden],#weiter[hidden]{display:none}
+#weiter{font-family:var(--font);font-size:12px;padding:12px;border:0;border-radius:12px;background:var(--btn);color:#fff;cursor:pointer}
+.mehr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+.mehr button{font-family:var(--font);font-size:10px;padding:8px 13px;border-radius:999px;border:2px solid var(--btn);background:transparent;color:var(--fg);cursor:pointer}
+.mehr button:active,.opts button:active{transform:scale(.95)}
+/* Spickzettel */
+#spick{position:fixed;inset:0;background:var(--bg);overflow:auto;padding:16px;font-family:var(--text);z-index:5}
+#spick[hidden]{display:none}
+#spick .in{max-width:420px;margin:0 auto;display:grid;gap:12px;padding-bottom:30px}
+#spick h2{font-family:var(--font);font-size:13px;margin:6px 0 0;color:var(--btn)}
+#spick table{border-collapse:collapse;width:100%;font-size:15px}
+#spick td,#spick th{border:1px solid var(--line);padding:5px 7px;text-align:left}
+#spick th{background:var(--btn);color:#fff;font-weight:600}
+#spick td b{font-size:17px}
+#spick p{margin:0;font-size:15px;line-height:1.4}
+#zu{position:sticky;top:0;justify-self:end;font-family:var(--font);font-size:11px;padding:8px 14px;border:0;border-radius:999px;background:var(--btn);color:#fff}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 id="titel">ENGLISCH-EISBÄR</h1>
+  <div class="lcd" id="pet" role="button" aria-label="Eisbär streicheln"><svg id="scene" viewBox="0 0 32 24"></svg></div>
+  <div id="msg">Hallo!</div>
+  <div class="card">
+    <div class="tag" id="tag"></div>
+    <div class="frage" id="frage"></div>
+    <div class="opts" id="opts"></div>
+    <div class="erkl" id="erkl" hidden></div>
+    <button id="weiter" hidden>Weiter</button>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="mehr">
+    <button id="b-spick">Spickzettel</button><button id="b-decke">Mütze</button><button id="b-ton">Ton: aus</button>
+  </div>
+</div>
+
+<div id="spick" hidden><div class="in">
+  <button id="zu">Zurück</button>
+  <h2>1 Wer tut etwas?</h2>
+  <table><tr><th>Deutsch</th><th>English</th></tr><tr><td>ich</td><td><b>I</b></td></tr><tr><td>du</td><td><b>you</b></td></tr><tr><td>er</td><td><b>he</b></td></tr><tr><td>sie (Mädchen, Frau)</td><td><b>she</b></td></tr><tr><td>es</td><td><b>it</b></td></tr><tr><td>wir</td><td><b>we</b></td></tr><tr><td>ihr</td><td><b>you</b></td></tr><tr><td>sie (mehrere)</td><td><b>they</b></td></tr></table>
+  <h2>2 Wen? Wem?</h2>
+  <table><tr><th>Deutsch</th><th>English</th></tr><tr><td>mich / mir</td><td><b>me</b></td></tr><tr><td>dich / dir</td><td><b>you</b></td></tr><tr><td>ihn / ihm</td><td><b>him</b></td></tr><tr><td>sie / ihr (Mädchen)</td><td><b>her</b></td></tr><tr><td>es / ihm (Ding, Tier)</td><td><b>it</b></td></tr><tr><td>uns</td><td><b>us</b></td></tr><tr><td>euch</td><td><b>you</b></td></tr><tr><td>sie / ihnen (mehrere)</td><td><b>them</b></td></tr></table>
+  <h2>3 Wessen?</h2>
+  <table><tr><th>Deutsch</th><th>English</th></tr><tr><td>mein</td><td><b>my</b></td></tr><tr><td>dein</td><td><b>your</b></td></tr><tr><td>sein (von ihm)</td><td><b>his</b></td></tr><tr><td>ihr (von ihr)</td><td><b>her</b></td></tr><tr><td>sein (Ding, Tier)</td><td><b>its</b></td></tr><tr><td>unser</td><td><b>our</b></td></tr><tr><td>euer</td><td><b>your</b></td></tr><tr><td>ihr (von mehreren)</td><td><b>their</b></td></tr></table>
+  <h2>4 Verben: das s bei he / she / it</h2>
+  <p>Nur bei <b>he, she, it</b> (oder einem Namen, „my sister“, „the dog“) kommt ein <b>s</b> ans Verb: <b>He plays.</b> · <b>Tom likes pizza.</b></p>
+  <p>Bei <b>I, you, we, they</b> und bei mehreren („Tom and Lisa“, „the cats“) <b>kein s</b>: <b>They play.</b></p>
+  <p>Nach o, ch, sh, ss → <b>-es</b>: goes, watches, washes, misses. Konsonant + y → <b>-ies</b>: tidies. Ausnahme: have → <b>has</b>.</p>
+  <h2>5 Mehrzahl bei Nomen</h2>
+  <p>Meistens <b>+s</b>: cat → cats. Nach s, x, ch, sh → <b>-es</b>: box → boxes. Konsonant + y → <b>-ies</b>: baby → babies (aber Vokal + y nur s: day → days).</p>
+  <p>Ausnahmen: child → children, man → men, woman → women, mouse → mice, foot → feet, tooth → teeth, person → people.</p>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+function pulse(){const l=document.createElement('label');l.style.display='none';l.innerHTML='<input type="checkbox" switch>';document.body.appendChild(l);l.click();l.remove()}
+function buzz(n=1,gap=120){try{if(navigator.vibrate){navigator.vibrate(Array.from({length:n*2-1},(_,i)=>i%2?gap:40));return}for(let i=0;i<n;i++)setTimeout(pulse,i*gap)}catch(e){}}
+const clamp=v=>Math.max(0,Math.min(100,v));
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ---------- Spielstand ----------
+const DEF={satt:70,punkte:0,serie:0,best:0,hut:'',ton:false,deck:[],pos:0,runde:1,falsch:[],n:0,t:Date.now()};
+let st=DEF;try{st={...DEF,...(JSON.parse(localStorage.getItem('englisch-eisbaer')||'null')||{})}}catch(e){}
+function save(){st.t=Date.now();try{localStorage.setItem('englisch-eisbaer',JSON.stringify(st))}catch(e){}}
+function say(t){$('msg').textContent=t}
+// Hunger: pro Stunde 4 Punkte weniger (höchstens ein Tag wird nachgeholt). Richtige Antworten füttern.
+function nachholen(){const h=Math.min(24,(Date.now()-st.t)/36e5);st.satt=clamp(st.satt-h*4)}
+nachholen();
+const RUNDE=150;
+
+// ---------- Inhalte ----------
+// Je Person: Wer? (s), Wen/Wem? (o), Wessen? (p) – [deutsch, englisch]
+const P=[
+ {s:['ich','I'],o:['mich / mir','me'],p:['mein','my']},
+ {s:['du','you'],o:['dich / dir','you'],p:['dein','your']},
+ {s:['er','he'],o:['ihn / ihm','him'],p:['sein (von ihm)','his']},
+ {s:['sie (ein Mädchen)','she'],o:['sie / ihr (ein Mädchen)','her'],p:['ihr (von ihr)','her']},
+ {s:['es (ein Ding, Tier)','it'],o:['es / ihm (ein Ding, Tier)','it'],p:['sein (von einem Ding, Tier)','its']},
+ {s:['wir','we'],o:['uns','us'],p:['unser','our']},
+ {s:['ihr (ihr alle)','you'],o:['euch','you'],p:['euer','your']},
+ {s:['sie (mehrere)','they'],o:['sie / ihnen (mehrere)','them'],p:['ihr (von mehreren)','their']}];
+const ART={s:'Wer tut etwas? (ich, du, er …)',o:'Wen? Wem? (mich, mir, ihn …)',p:'Wessen? (mein, dein, sein …)'};
+// Englisch → Deutsch nur, wo das englische Wort eindeutig ist
+const EINDEUTIG=[[0,'s'],[0,'o'],[0,'p'],[2,'s'],[2,'o'],[2,'p'],[3,'s'],[4,'p'],[5,'s'],[5,'o'],[5,'p'],[7,'s'],[7,'o'],[7,'p']];
+// Lückensätze: [Satz mit ___, deutscher Hinweis, Person, Art]
+const SAETZE=[
+ ['___ am eleven years old.','ich',0,'s'],['___ are my best friend.','du',1,'s'],['___ is my brother.','er',2,'s'],['___ is my sister.','sie – meine Schwester',3,'s'],
+ ['___ is a cat.','es',4,'s'],['___ are in class 5c.','wir',5,'s'],['___ are at school.','sie – mehrere',7,'s'],['My brother is ten. ___ likes football.','er',2,'s'],
+ ['Lisa is my friend. ___ has got a rabbit.','sie – Lisa',3,'s'],['___ play tennis on Fridays.','wir',5,'s'],['Look at my new bike! ___ is very fast.','es – das Fahrrad',4,'s'],
+ ['Where are ___ from, kids?','ihr',6,'s'],['Tom and Lisa are cousins. ___ live in a big house.','sie – Tom und Lisa',7,'s'],['___ have got a new teacher.','wir',5,'s'],
+ ['Can you help ___?','mir',0,'o'],['I like ___.','dich',1,'o'],['Look at ___!','ihn',2,'o'],['Give the book to ___.','ihr – dem Mädchen',3,'o'],
+ ['I love my bike. I ride ___ every day.','es – das Fahrrad',4,'o'],['Come with ___!','uns',5,'o'],['I can see ___, kids!','euch',6,'o'],['The cats are cute. I play with ___.','ihnen – den Katzen',7,'o'],
+ ['Mum calls ___ every day.','mich',0,'o'],['Can I play with ___?','dir',1,'o'],['We often visit ___.','sie – die Großeltern',7,'o'],['Tom is nice. I like ___.','ihn – Tom',2,'o'],
+ ['Anna is sad. I help ___.','ihr – Anna',3,'o'],['The teacher can see ___.','uns',5,'o'],['Ben is my friend. I sit next to ___.','ihm – Ben',2,'o'],
+ ['This is ___ bag.','mein',0,'p'],['Is this ___ pen?','dein',1,'p'],['Tom has got a bike. ___ bike is red.','sein – Toms',2,'p'],['Anna has got a dog. ___ dog is small.','ihr – Annas',3,'p'],
+ ['My bike is old. ___ bell is broken.','seine – vom Fahrrad',4,'p'],['___ teacher is nice.','unser',5,'p'],['Ben and Lisa love ___ hamster.','ihr – von Ben und Lisa',7,'p'],
+ ['What\'s ___ name?','dein',1,'p'],['___ name is Max.','mein',0,'p'],['Sam has got a sister. ___ sister is ten.','seine – Sams',2,'p'],
+ ['Lucy has got a pet. ___ pet is a rabbit.','ihr – Lucys',3,'p'],['Kids, where is ___ classroom?','euer',6,'p'],['We are in room 12. ___ classroom is nice.','unser',5,'p'],
+ ['My parents are at home. ___ car is in the garage.','ihr – von meinen Eltern',7,'p'],['I like this book. ___ pictures are great.','seine – vom Buch',4,'p']];
+// Mehrzahl: [eins, mehrere, Regel]
+const NOMEN=[['cat','cats','s'],['dog','dogs','s'],['book','books','s'],['pen','pens','s'],['apple','apples','s'],['sister','sisters','s'],['brother','brothers','s'],['friend','friends','s'],['teacher','teachers','s'],['rabbit','rabbits','s'],['bike','bikes','s'],['girl','girls','s'],['boy','boys','vy'],['day','days','vy'],['toy','toys','vy'],['key','keys','vy'],['egg','eggs','s'],['hamster','hamsters','s'],['ruler','rulers','s'],['cousin','cousins','s'],
+ ['box','boxes','es'],['bus','buses','es'],['watch','watches','es'],['dish','dishes','es'],['glass','glasses','es'],['class','classes','es'],['sandwich','sandwiches','es'],['fox','foxes','es'],
+ ['baby','babies','ies'],['family','families','ies'],['party','parties','ies'],['hobby','hobbies','ies'],['city','cities','ies'],['story','stories','ies'],
+ ['child','children','irr'],['man','men','irr'],['woman','women','irr'],['mouse','mice','irr'],['foot','feet','irr'],['tooth','teeth','irr'],['person','people','irr']];
+const ZAHL=['two','three','four','five','six'];
+const REGEL_N={s:'Normal: einfach <b>+s</b>.',vy:'Vokal + y (a, e, o, u vor dem y) → nur <b>+s</b>.',es:'Nach s, x, ch, sh → <b>-es</b>.',ies:'Konsonant + y → y weg, <b>-ies</b> dran.',irr:'Ausnahme! Diese Mehrzahl muss man auswendig lernen.'};
+// Verben: [Grundform, he/she/it-Form, Rest für Menschen, Rest für Tiere (oder null)]
+const VERBEN=[['play','plays','football','in the garden'],['like','likes','pizza','fish'],['eat','eats','apples','a lot'],['sleep','sleeps','a lot','on the sofa'],['read','reads','comics',null],
+ ['go','goes','to school','into the garden'],['watch','watches','TV',null],['live','lives','in a big house','in the garden'],['swim','swims','in the lake','in the lake'],['sing','sings','in a band',null],
+ ['ride','rides','a bike',null],['help','helps','at home',null],['speak','speaks','English',null],['tidy','tidies','the room',null],['do','does','the homework',null],['wash','washes','the car',null],
+ ['miss','misses','the bus',null],['love','loves','music','carrots'],['run','runs','fast','fast'],['need','needs','a new pen','water'],['have','has','got a rabbit','got long ears'],['make','makes','a cake',null],['drink','drinks','milk','water']];
+// Satzanfänge: [Wort, s nötig?, Tier?, entspricht]
+const SUBJ=[['I',0,0,'I'],['You',0,0,'you'],['We',0,0,'we'],['They',0,0,'they'],['He',1,0,'he'],['She',1,0,'she'],['It',1,1,'it'],['My sister',1,0,'she'],['Tom',1,0,'he'],['My mum',1,0,'she'],['My dad',1,0,'he'],
+ ['The dog',1,1,'it'],['My friends',0,0,'they'],['Tom and Lisa',0,0,'they'],['The cats',0,1,'they'],['My parents',0,0,'they'],['The rabbits',0,1,'they'],['Anna',1,0,'she']];
+
+// ---------- Fragen bauen ----------
+function distract(antwort,kandidaten,n=3){return shuffle([...new Set(kandidaten)].filter(x=>x!==antwort)).slice(0,n)}
+function frPron(id){
+  if(id?id[1]==='e':Math.random()<.3){ // Englisch → Deutsch
+    const [r,k]=id?[+id[2],id[3]]:rnd(EINDEUTIG),a=P[r][k][0],en=P[r][k][1];
+    const kand=shuffle([...['s','o','p'].filter(x=>x!==k).map(x=>P[r][x][0]),...shuffle(P.filter((_,i)=>i!==r)).map(x=>x[k][0])]);
+    return{kat:'pron',id:'pe'+r+k,tag:'Was heißt das auf Deutsch?',html:`<span class="luecke">${esc(en)}</span>`,a,opts:shuffle([a,...distract(a,kand)]),erkl:'Merke: '+tabelle(r),sprich:en};
+  }
+  const r=id?+id[2]:Math.floor(Math.random()*8),k=id?id[3]:rnd(['s','o','p']),a=P[r][k][1];
+  const kand=[...['s','o','p'].map(x=>P[r][x][1]),...shuffle(P).map(x=>x[k][1])];
+  return{kat:'pron',id:'pd'+r+k,tag:ART[k],html:`${esc(P[r][k][0])} <span class="hint">auf Englisch?</span>`,a,opts:shuffle([a,...distract(a,kand)]),erkl:'Merke: '+tabelle(r),sprich:a};
+}
+function tabelle(r){const p=P[r];return`<b>${esc(p.s[0])} → ${p.s[1]}</b> · <b>${esc(p.o[0])} → ${p.o[1]}</b> · <b>${esc(p.p[0])} → ${p.p[1]}</b>`}
+function frSatz(i){
+  i=i??Math.floor(Math.random()*SAETZE.length);const [t,h,r,k]=SAETZE[i];
+  const vorn=t.startsWith('___'),f=w=>vorn||w==='I'?cap(w):w,a=f(P[r][k][1]);
+  const kand=[...['s','o','p'].map(x=>P[r][x][1]),...shuffle(P).map(x=>x[k][1])].map(f);
+  return{kat:'satz',id:'s'+i,tag:'Setz das richtige Wort ein',html:`${esc(t).replace('___','<span class="luecke">?</span>')}<span class="hint">(${esc(h)})</span>`,a,opts:shuffle([a,...distract(a,kand)]),
+    voll:t.replace('___',a),erkl:`Gefragt ist: <b>${ART[k].split(' (')[0]}</b><br>Merke: ${tabelle(r)}`};
+}
+function frPlural(i){
+  i=i??Math.floor(Math.random()*NOMEN.length);const [e,m,re]=NOMEN[i],z=rnd(ZAHL);
+  const kand=re==='irr'?[e,e+'s',e+'es']:re==='ies'?[e,e+'s',e+'es']:re==='es'?[e,e+'s']:re==='vy'?[e,e.slice(0,-1)+'ies']:[e,e+'es'];
+  const html=Math.random()<.5?`one ${e} → ${z} <span class="luecke">?</span>`:`I've got ${z} <span class="luecke">?</span>.<span class="hint">(${e})</span>`;
+  return{kat:'plural',id:'n'+i,tag:'Mehrzahl: aus eins mach viele',html,a:m,opts:shuffle([m,...distract(m,kand)]),voll:`${z} ${m}`,erkl:`${e} → <b>${m}</b>. ${REGEL_N[re]}`};
+}
+function frVerb(vi,si){
+  vi=vi??Math.floor(Math.random()*VERBEN.length);const [g,s3,restM,restT]=VERBEN[vi];
+  const moegl=SUBJ.map((x,i)=>i).filter(i=>SUBJ[i][2]?restT:true);
+  si=si??(Math.random()<.5?rnd(moegl.filter(i=>SUBJ[i][1])):rnd(moegl.filter(i=>!SUBJ[i][1])));
+  const [w,mitS,tier,entspr]=SUBJ[si],rest=tier?restT:restM,a=mitS?s3:g;
+  const kand=[g,s3];if(s3!==g+'s'&&!g.endsWith('s'))kand.push(g+'s');
+  const wer=w===entspr||w===cap(entspr)?`<b>${w}</b>`:`<b>${w}</b> = ${entspr}`;
+  const erkl=mitS?`${wer} → nur bei he / she / it kommt das <b>s</b> dran: <b>${s3}</b>.`+(s3!==g+'s'?` (${g==='have'?'have → has ist eine Ausnahme':s3.endsWith('ies')?'Konsonant + y → -ies':'nach o, ch, sh, ss → -es'})`:'')
+    :`${wer} → ${entspr==='I'||entspr==='you'?'':'Mehrzahl, '}<b>kein s</b>: <b>${g}</b>. Das s gibt es nur bei he / she / it.`;
+  return{kat:'verb',id:'v'+vi+'-'+si,tag:'Verb: mit s oder ohne?',html:`${esc(w)} <span class="luecke">?</span> ${esc(rest)}.<span class="hint">(${g})</span>`,a,opts:shuffle([a,...distract(a,kand)]),voll:`${w} ${a} ${rest}.`,erkl};
+}
+const BAU={pron:frPron,satz:frSatz,plural:frPlural,verb:frVerb};
+function ausId(id){ // Falsch beantwortete Frage genauso wieder bauen
+  if(id[0]==='s')return frSatz(+id.slice(1));
+  if(id[0]==='n')return frPlural(+id.slice(1));
+  if(id[0]==='v'){const [a,b]=id.slice(1).split('-');return frVerb(+a,+b)}
+  return frPron(id);
+}
+// Eine Runde = 150 verschiedene Fragen: alle 44 Lückensätze, 30 Pronomen, 30 Mehrzahl, 46 Verben
+function neueRunde(){
+  const pron=shuffle([...[0,1,2,3,4,5,6,7].flatMap(r=>['s','o','p'].map(k=>'pd'+r+k)),...EINDEUTIG.map(([r,k])=>'pe'+r+k)]).slice(0,30);
+  const satz=SAETZE.map((_,i)=>'s'+i);
+  const plural=shuffle(NOMEN.map((_,i)=>'n'+i)).slice(0,30);
+  const verb=[];VERBEN.forEach((v,vi)=>{for(const mitS of [1,0]){const m=SUBJ.map((x,i)=>i).filter(i=>SUBJ[i][1]===mitS&&(SUBJ[i][2]?v[3]:true));verb.push('v'+vi+'-'+rnd(m))}});
+  st.deck=shuffle([...pron,...satz,...plural,...verb]).slice(0,RUNDE);st.pos=0;st.falsch=[];st.n=0;
+}
+if(st.deck.length!==RUNDE)neueRunde();
+// Falsche Fragen kommen nach 3 bis 5 neuen Fragen wieder – so lange, bis sie richtig sind
+function naechste(){
+  const faellig=st.falsch.find(f=>f.due<=st.n)||(st.pos>=st.deck.length&&st.falsch[0]);
+  if(faellig){st.falsch=st.falsch.filter(f=>f!==faellig);const q=ausId(faellig.id);q.wieder=true;return q}
+  if(st.pos>=st.deck.length){st.runde++;neueRunde();st.punkte+=20;start('hop',40);buzz(3);setTimeout(()=>say(`Alle ${RUNDE} geschafft! +20 Punkte. Runde ${st.runde} beginnt.`),50)}
+  st.n++;return ausId(st.deck[st.pos++]);
+}
+
+// ---------- Ablauf ----------
+let q=null,fertig=false;
+function zeige(){
+  q=naechste();fertig=false;
+  $('tag').textContent=q.tag+(q.wieder?' · noch mal!':'');$('frage').innerHTML=q.html;
+  $('erkl').hidden=true;$('weiter').hidden=true;
+  $('opts').innerHTML='';q.opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>antwort(b,o);$('opts').appendChild(b)});
+  render();save();
+}
+const LOB=['Super!','Richtig!','Klasse!','Genau!','Yes!','Toll!','Perfekt!'];
+function antwort(btn,o){
+  if(fertig)return;fertig=true;
+  const ok=o===q.a;
+  [...$('opts').children].forEach(b=>{b.disabled=true;if(b.textContent===q.a)b.classList.add('ok')});
+  if(q.voll)$('frage').innerHTML=q.html.replace('<span class="luecke">?</span>',`<span class="luecke">${esc(q.a)}</span>`);
+  if(ok){
+    st.serie++;st.best=Math.max(st.best,st.serie);st.punkte++;st.satt=clamp(st.satt+6);
+    if(st.serie%5===0){st.punkte+=2;start('hop',24);say(`${st.serie} richtig hintereinander! +2 Bonus`)}else{start('eat',20);say(rnd(LOB)+' Mampf, ein Fisch!')}
+    buzz(1);
+    sprich(q.voll||q.sprich);
+    setTimeout(()=>{if(fertig&&q)zeige()},1300);
+  }else{
+    btn.classList.add('bad');st.serie=0;start('turn',30);say(q.wieder?'Noch nicht – die kommt gleich nochmal.':'Fast! Schau mal:');buzz(2);
+    st.falsch.push({id:q.id,due:st.n+3+Math.floor(Math.random()*3)});
+    $('erkl').className='erkl bad';$('erkl').innerHTML=(q.voll?'':`Richtig ist: <b>${esc(q.a)}</b><br>`)+q.erkl+(q.voll?`<br>✔ <b>${esc(q.voll)}</b>`:'');$('erkl').hidden=false;$('weiter').hidden=false;
+    sprich(q.voll||q.sprich);
+  }
+  render();save();
+}
+$('weiter').onclick=()=>zeige();
+function sprich(t){if(!st.ton||!t||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
+function render(){
+  $('stats').innerHTML=`<span>Satt</span><div class="bar"><i style="width:${st.satt}%"></i></div><span>${Math.round(st.satt)}%</span>`+
+    `<span>Runde ${st.runde}</span><div class="bar"><i style="width:${st.pos/RUNDE*100}%"></i></div><span>${st.pos}/${RUNDE}</span>`+
+    `<span>Punkte</span><span>${st.punkte} · Serie ${st.serie} (Rekord ${st.best})${st.falsch.length?` · ${st.falsch.length} üben`:''}</span><span></span>`;
+  $('b-ton').textContent='Ton: '+(st.ton?'an':'aus');
+}
+$('b-spick').onclick=()=>{$('spick').hidden=false;$('spick').scrollTop=0};
+$('zu').onclick=()=>{$('spick').hidden=true};
+$('b-ton').onclick=()=>{st.ton=!st.ton;render();save();if(st.ton)sprich('Hello!')};
+
+// ---------- Eisbär (Zeichnung wie im Polar-Gotchi) ----------
+const svg=$('scene');let out='';
+const px=(x,y,c,w=1,h=1)=>out+=`<rect x="${x}" y="${y}" width="${w+.06}" height="${h+.06}" fill="var(--${c})"/>`;
+const COL={K:'ink',D:'eye',W:'bear',E:'edge',G:'sun',P:'blass',R:'rot',B:'water'};
+const sprite=(rows,x,y)=>rows.forEach((r,j)=>[...r].forEach((ch,i)=>{if(COL[ch])px(x+i,y+j,COL[ch])}));
+const FISH=[".KK.K","KKKKK",".KK.K"],HEART=[".R.R.","RRRRR",".RRR.","..R.."],FRAGE=[".KK.","K..K","..K.",".K..","....",".K.."];
+function bear(x,y,o){
+  const r=["..WW.....WW..",".WRWWWWWWWRW.","..WWWWWWWWW..","..WDWWWWWDW..","..WWWCCCWWW..","...WWCDCWW...",".WWWWWWWWWWW.","WWWWWWWWWWWWW","WWWWWWWWWWWWW",".WWWWWWWWWWW.",o.leg?"..WW.....WW..":".WW.......WW."].map(s=>[...s]);
+  if(o.upL){r[7][0]=r[8][0]='.';r[5][0]=r[6][0]='W'}
+  if(o.upR){r[7][12]=r[8][12]='.';r[5][12]=r[6][12]='W'}
+  if(o.zu){r[3][3]=r[3][9]='L'}
+  if(o.mampf)r[6][6]='D';
+  const sx=Math.cos(o.turn||0),s=o.sy||1,d=Math.sin(o.turn||0)*2.6,hunger=st.satt<20;
+  const C={W:hunger?'blass':'bear',C:'schnauze',R:'rosa',D:'eye',L:hunger?'blass':'bear'};
+  const voll=(i,j)=>r[j]&&r[j][i]&&r[j][i]!=='.';
+  const g=(dx,dy,front)=>{
+    out+=`<g transform="translate(${x+6.5+dx} ${y+10-5.5*s+dy}) rotate(${o.rot||0}) scale(${sx} ${s}) translate(-6.5 -5.5)">`;
+    if(front)for(let j=-1;j<=r.length;j++)for(let i=-1;i<=13;i++)if(!voll(i,j)&&(voll(i-1,j)||voll(i+1,j)||voll(i,j-1)||voll(i,j+1)))px(i,j,'edge');
+    r.forEach((row,j)=>row.forEach((c,i)=>{if(c==='.')return;px(i,j,front?C[c]:'bear2');if(front&&c==='L')px(i,j+.4,'eye',1,.3)}));
+    if(front&&st.hut){const h=HATS[st.hut];sprite(h.rows,h.x,h.y)}
+    out+='</g>'};
+  for(let k=Math.abs(d);k>.01;k-=.4)g(-Math.sign(d)*k,-k*.35,false);
+  g(0,0,true);
+}
+// Mützen: mit Punkten freispielen
+const HATS={muetze:{p:30,n:'Bommelmütze',x:3,y:-2,rows:["...R...",".RRRRR.","RWRWRWR"]},krone:{p:80,n:'Krone',x:4,y:-1,rows:["G.G.G","GGGGG"]},
+  fischer:{p:150,n:'Fischerhut',x:2,y:-1,rows:["..GGGGG..","GGGGGGGGG"]},blume:{p:250,n:'Schneeblume',x:9,y:-1,rows:[".P.","PGP",".P."]}};
+const frei=pt=>Object.keys(HATS).filter(k=>pt>=HATS[k].p);
+let anim=null,cx=9,dir=1,f=0;
+function start(type,len){anim={type,t:0,len}}
+function frame(){
+  out='';f++;
+  const A=anim,t=A?A.t:0;let y=11,o={leg:0,zu:f%53<2},after=()=>{};
+  out+=`<circle cx="27" cy="4.5" r="2.4" fill="var(--sun)"/>`;
+  const wx=((f*.04+16)%46)-9;out+=`<g fill="var(--cloud)"><circle cx="${wx}" cy="6" r="1.7"/><circle cx="${wx+2}" cy="5.2" r="2.3"/><circle cx="${wx+4.2}" cy="6.1" r="1.6"/><rect x="${wx}" y="6" width="4.2" height="1.7"/></g>`;
+  out+=`<path d="M0 21 L3 15 L6 18 L9 13 L13 21Z" fill="var(--ice)" opacity=".7"/><path d="M20 21 L24 16 L27 18 L32 14 L32 21Z" fill="var(--ice)" opacity=".7"/>`;
+  px(0,21,'ice',32,3);px(0,21,'edge',32,.25);
+  out+=`<ellipse cx="27" cy="22.4" rx="3" ry=".8" fill="var(--water)"/>`;
+  if(!A){if(f%3===0){cx+=dir;if(cx<1||cx>17)dir*=-1}o.leg=(f>>1)&1}
+  switch(A?.type){
+    case'eat':{o.upL=o.upR=1;if(t<8)sprite(FISH,cx+4,t*1.2-3);else{sprite(FISH.map(r=>r.slice(0,Math.max(0,5-(t-8)))),cx+4,7);o.mampf=t%2===0;if(t%2)y=10}break}
+    case'hop':{const h=Math.abs(Math.sin(t*.5))*3;y=11-Math.round(h);o.upL=o.upR=h>1;for(let k=0;k<6;k++){const a=k+t*.4;px(cx+6.5+Math.cos(a)*9,14+Math.sin(a)*6,'sun',.8,.8)}break}
+    case'turn':{o.turn=Math.sin(t/A.len*Math.PI*2)*.6;after=()=>sprite(FRAGE,cx+5,0);break}
+    case'pet':{o.upL=o.upR=1;o.zu=true;o.turn=Math.sin(t/10*Math.PI)*.4;sprite(HEART,cx+4,7-t*.6);break}
+  }
+  bear(cx,y,o);after();
+  if(A&&++A.t>=A.len)anim=null;
+  svg.innerHTML=out;
+}
+setInterval(frame,150);
+$('pet').onclick=()=>{start('pet',10);buzz(1);say(st.satt<30?'Ich hab Hunger! Beantworte Fragen, dann krieg ich Fisch.':'Brummm, kuschelig! ♥')};
+$('b-decke').onclick=()=>{
+  const fr=frei(st.punkte),nx=Object.keys(HATS).find(k=>HATS[k].p>st.punkte);
+  if(!fr.length){buzz(1);say(`Noch ${HATS[nx].p-st.punkte} Punkte bis zur ${HATS[nx].n}!`);return}
+  const liste=['',...fr];st.hut=liste[(liste.indexOf(st.hut)+1)%liste.length];
+  say((st.hut?`Schick! ${HATS[st.hut].n}.`:'Ohne Mütze.')+(nx?` Noch ${HATS[nx].p-st.punkte} Punkte bis zum ${HATS[nx].n}!`:''));buzz(1);save();
+};
+setInterval(()=>{nachholen();render();save()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){nachholen();render()}});
+zeige();frame();say(st.satt<30?'Ich hab Hunger! Jede richtige Antwort ist ein Fisch für mich.':`Hallo! Jede richtige Antwort ist ein Fisch für mich. Runde ${st.runde}: ${RUNDE} Fragen.`);
+// Nur für automatische Tests: alle Fragen einmal bauen
+window.ETEST={P,SAETZE,NOMEN,VERBEN,SUBJ,frPron,frSatz,frPlural,frVerb,naechste,neueRunde,ausId};
+</script>
+</body></html>
