@@ -40,6 +40,16 @@ h1{margin:0;font-size:16px;letter-spacing:.12em;color:var(--btn)}
 .mehr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
 .mehr button{font-family:var(--font);font-size:10px;padding:8px 13px;border-radius:999px;border:2px solid var(--btn);background:transparent;color:var(--fg);cursor:pointer}
 .mehr button:active,.opts button:active{transform:scale(.95)}
+/* Pronomen-Training: mehrere Lücken, Eintippen */
+.opts.lang{grid-template-columns:1fr}.opts.lang button{font-size:17px;padding:11px 8px}
+.frage .orig{display:block;font-size:17px;font-weight:400;margin-bottom:6px;padding:6px 8px;border-left:4px solid var(--btn);background:var(--bg)}
+.frage .mini{font-size:13px;font-weight:400;opacity:.65;margin-left:2px}
+.frage input.tipp{font:inherit;font-weight:600;width:4.4em;padding:0 4px;border:0;border-bottom:3px solid var(--btn);background:var(--bg);color:var(--fg);text-align:center;border-radius:6px 6px 0 0}
+.frage input.tipp:focus{outline:2px solid var(--btn)}
+.frage .luecke.ok{color:var(--ok)}.frage .luecke.bad{color:var(--bad)}.frage .luecke.bad s{opacity:.7;font-weight:400}
+#pruefen{font-family:var(--font);font-size:12px;padding:12px;border:0;border-radius:12px;background:var(--btn);color:#fff;cursor:pointer}
+#pruefen[hidden]{display:none}
+.modus{font-size:9px;opacity:.75}
 /* Spickzettel */
 #spick{position:fixed;inset:0;background:var(--bg);overflow:auto;padding:16px;font-family:var(--text);z-index:5}
 #spick[hidden]{display:none}
@@ -62,17 +72,23 @@ h1{margin:0;font-size:16px;letter-spacing:.12em;color:var(--btn)}
     <div class="tag" id="tag"></div>
     <div class="frage" id="frage"></div>
     <div class="opts" id="opts"></div>
+    <button id="pruefen" hidden>Prüfen</button>
     <div class="erkl" id="erkl" hidden></div>
     <button id="weiter" hidden>Weiter</button>
   </div>
   <div class="stats" id="stats"></div>
   <div class="mehr">
-    <button id="b-spick">Spickzettel</button><button id="b-decke">Mütze</button><button id="b-ton">Ton: aus</button>
+    <button id="b-spick">Spickzettel</button><button id="b-thema">Thema: Mix</button><button id="b-decke">Mütze</button><button id="b-ton">Ton: aus</button>
   </div>
 </div>
 
 <div id="spick" hidden><div class="in">
   <button id="zu">Zurück</button>
+  <h2>So findest du das richtige Pronomen</h2>
+  <p><b>1. Wer tut etwas?</b> Steht meist vorne, vor dem Verb → <b>I, you, he, she, it, we, they</b>.</p>
+  <p><b>2. Wen? Wem?</b> Steht hinter dem Verb oder nach with, to, at, for → <b>me, you, him, her, it, us, them</b>.</p>
+  <p><b>3. Wessen? Wem gehört es?</b> Steht direkt vor einem Ding oder einer Person → <b>my, your, his, her, its, our, their</b>.</p>
+  <p>Erst die Frage stellen (Wer? Wen? Wessen?), dann die Person (er, sie, mehrere …) – dann ist es nur noch ein Feld in der Tabelle.</p>
   <h2>1 Wer tut etwas?</h2>
   <table><tr><th>Deutsch</th><th>English</th></tr><tr><td>ich</td><td><b>I</b></td></tr><tr><td>du</td><td><b>you</b></td></tr><tr><td>er</td><td><b>he</b></td></tr><tr><td>sie (Mädchen, Frau)</td><td><b>she</b></td></tr><tr><td>es</td><td><b>it</b></td></tr><tr><td>wir</td><td><b>we</b></td></tr><tr><td>ihr</td><td><b>you</b></td></tr><tr><td>sie (mehrere)</td><td><b>they</b></td></tr></table>
   <h2>2 Wen? Wem?</h2>
@@ -99,7 +115,7 @@ const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 // ---------- Spielstand ----------
-const DEF={satt:70,punkte:0,serie:0,best:0,hut:'',ton:false,deck:[],pos:0,runde:1,falsch:[],n:0,t:Date.now()};
+const DEF={satt:70,punkte:0,serie:0,best:0,hut:'',ton:false,thema:'mix',tipp:false,deck:[],pos:0,runde:1,falsch:[],n:0,t:Date.now()};
 let st=DEF;try{st={...DEF,...(JSON.parse(localStorage.getItem('englisch-eisbaer')||'null')||{})}}catch(e){}
 function save(){st.t=Date.now();try{localStorage.setItem('englisch-eisbaer',JSON.stringify(st))}catch(e){}}
 function say(t){$('msg').textContent=t}
@@ -153,13 +169,85 @@ const VERBEN=[['play','plays','football','in the garden'],['like','likes','pizza
 const SUBJ=[['I',0,0,'I'],['You',0,0,'you'],['We',0,0,'we'],['They',0,0,'they'],['He',1,0,'he'],['She',1,0,'she'],['It',1,1,'it'],['My sister',1,0,'she'],['Tom',1,0,'he'],['My mum',1,0,'she'],['My dad',1,0,'he'],
  ['The dog',1,1,'it'],['My friends',0,0,'they'],['Tom and Lisa',0,0,'they'],['The cats',0,1,'they'],['My parents',0,0,'they'],['The rabbits',0,1,'they'],['Anna',1,0,'she']];
 
+// ---------- Pronomen-Training: mehrere Pronomen aus verschiedenen Arten in einer Aufgabe ----------
+// Code = Person (0–7) + Art (s = Wer?, o = Wen/Wem?, p = Wessen?)
+// Doppel-Sätze: [Satz mit ___, deutsche Hinweise je Lücke, Codes je Lücke]
+const DOPPEL=[
+ ['___ is my friend. I like ___.',['er','ihn'],['2s','2o']],
+ ['Anna has got a cat. ___ loves ___ cat.',['sie','ihre'],['3s','3p']],
+ ['I love my dog. I play with ___ every day. ___ name is Rex.',['ihm – dem Hund','sein'],['4o','4p']],
+ ['Tom and Lisa are my cousins. I visit ___ on Sundays. ___ house is big.',['sie – Tom und Lisa','ihr – von beiden'],['7o','7p']],
+ ['___ are in class 5c. ___ classroom is big.',['wir','unser'],['5s','5p']],
+ ['Can you help ___? ___ bag is so heavy.',['mir','meine'],['0o','0p']],
+ ['___ is my sister. Give the book to ___, please.',['sie','ihr'],['3s','3o']],
+ ['Ben, where are ___? I can\'t find ___ bag!',['du','deine'],['1s','1p']],
+ ['Max has got a new bike. ___ loves ___.',['er','es – das Fahrrad'],['2s','4o']],
+ ['My grandma is nice. ___ often visits ___.',['sie','uns'],['3s','5o']],
+ ['The kids are in the garden. Mum plays with ___. ___ dog is there, too.',['ihnen','ihr – von den Kindern'],['7o','7p']],
+ ['I have got a hamster. ___ is small and I love ___.',['er – der Hamster','ihn – den Hamster'],['4s','4o']],
+ ['Ben, ___ mum is here! ___ wants to see ___.',['deine','sie','dich'],['1p','3s','1o']],
+ ['We have got a new friend. ___ name is Sam and ___ is from London.',['sein','er'],['2p','2s']],
+ ['This is Anna. ___ brother plays football with ___.',['ihr','mir'],['3p','0o']],
+ ['Kids, is this ___ classroom? Can I help ___?',['euer','euch'],['6p','6o']],
+ ['___ cat is ill. We take ___ to the vet.',['unsere','sie – die Katze'],['5p','4o']],
+ ['Tom and I are friends. ___ play football and Tom\'s dad watches ___.',['wir','uns'],['5s','5o']],
+ ['Lisa and Anna are sisters. ___ love ___ dog, and the dog loves ___.',['sie','ihren','sie'],['7s','7p','7o']],
+ ['My brother is ten. ___ room is next to ___ room.',['sein','meinem'],['2p','0p']],
+ ['___ like ___ teacher, and she likes ___.',['wir','unsere','uns'],['5s','5p','5o']],
+ ['Look at the dog! ___ is in ___ bed and Tom is with ___.',['er – der Hund','seinem','ihm'],['4s','4p','4o']]];
+// Ersetzen ohne deutsche Hilfe: [Original, Satz mit ___, Codes]
+const ERSETZ=[
+ ['Lisa likes Tom.','___ likes ___.',['3s','2o']],
+ ['Tom likes Lisa.','___ likes ___.',['2s','3o']],
+ ['Tom and Ben play with Lisa\'s dog.','___ play with ___ dog.',['7s','3p']],
+ ['Anna gives Ben Anna\'s book.','___ gives ___ ___ book.',['3s','2o','3p']],
+ ['The cat loves the cat\'s bed.','___ loves ___ bed.',['4s','4p']],
+ ['My parents call my sister and me.','___ call ___.',['7s','5o']],
+ ['Ben helps Ben\'s mum.','___ helps ___ mum.',['2s','2p']],
+ ['Lisa and I visit Lisa\'s grandma.','___ visit ___ grandma.',['5s','3p']],
+ ['Max sees the girls.','___ sees ___.',['2s','7o']],
+ ['The girls see Max.','___ see ___.',['7s','2o']],
+ ['Tom gives Lisa and me Tom\'s ball.','___ gives ___ ___ ball.',['2s','5o','2p']],
+ ['Mum loves Dad.','___ loves ___.',['3s','2o']],
+ ['The dogs play with the dogs\' ball.','___ play with ___ ball.',['7s','7p']],
+ ['Sam phones Lisa and Anna.','___ phones ___.',['2s','7o']],
+ ['Anna and I like Anna\'s cat.','___ like ___ cat.',['5s','3p']],
+ ['The rabbit is in the rabbit\'s house.','___ is in ___ house.',['4s','4p']]];
+const LUECKE='<span class="luecke">?</span>';
+const grossVorne=vor=>{const b=vor.replace(/\s+$/,'');return b===''||/[.!?]$/.test(b)};
+// Wort für Lücke j – groß am Satzanfang und bei I
+const formIn=(teile,j,r,k)=>{const w=P[r][k][1],vorn=j===0?grossVorne(teile[0]):teile[j].trim()!==''&&grossVorne(teile[j]);return vorn||w==='I'?cap(w):w};
+// Falsche Kombinationen: meist dieselbe Person in einer anderen Art (he ↔ him ↔ his) – genau der schwierige Wechsel
+function kombis(teile,codes,as){
+  const set=new Set([as.join(' … ')]);let n=0;
+  while(set.size<4&&n++<80)set.add(codes.map((c,j)=>{const r=+c[0],k=c[1],x=Math.random();
+    return x<.4?as[j]:x<.85?formIn(teile,j,r,rnd(['s','o','p'])):formIn(teile,j,Math.floor(Math.random()*8),k)}).join(' … '));
+  return shuffle([...set]);
+}
+function erklMehr(codes,as){return codes.map((c,j)=>{const r=+c[0],k=c[1];return`${j+1}. ${ART[k].split(' (')[0]} → <b>${esc(as[j])}</b> <span style="opacity:.7">(${esc(P[r][k][0])})</span>`}).join('<br>')}
+function frDoppel(i){
+  const [t,h,codes]=DOPPEL[i],teile=t.split('___'),as=codes.map((c,j)=>formIn(teile,j,+c[0],c[1]));
+  const html=teile.map((x,j)=>esc(x)+(j<codes.length?`${LUECKE}<span class="mini">(${esc(h[j])})</span>`:'')).join('');
+  return{kat:'mehr',id:'D'+i,tag:`${codes.length} Pronomen – pass auf, welche Art!`,html,as,a:as.join(' … '),opts:kombis(teile,codes,as),voll:teile.map((x,j)=>x+(as[j]??'')).join(''),erkl:erklMehr(codes,as)};
+}
+function frErsetz(i){
+  const [o,t,codes]=ERSETZ[i],teile=t.split('___'),as=codes.map((c,j)=>formIn(teile,j,+c[0],c[1]));
+  const html=`<span class="orig">${esc(o)}</span>`+teile.map((x,j)=>esc(x)+(j<codes.length?LUECKE:'')).join('')+'<span class="hint">Ohne Hilfe: Wer? Wen? Wessen?</span>';
+  return{kat:'mehr',id:'E'+i,tag:'Ersetze die Namen durch Pronomen',html,as,a:as.join(' … '),opts:kombis(teile,codes,as),voll:teile.map((x,j)=>x+(as[j]??'')).join(''),erkl:erklMehr(codes,as)};
+}
+function frReihe(r){
+  const codes=['s','o','p'].map(k=>r+k),teile=['x','x','x','x'],as=codes.map((c,j)=>formIn(teile,j,r,c[1]));
+  const html=`${esc(P[r].s[0])}<span class="hint">Alle drei Formen auf Englisch:</span><span class="hint">Wer? ${LUECKE} · Wen/Wem? ${LUECKE} · Wessen? ${LUECKE}</span>`;
+  return{kat:'mehr',id:'R'+r,tag:'Wer? – Wen? – Wessen?',html,as,a:as.join(' … '),opts:kombis(teile,codes,as),voll:as.join(' – '),erkl:'Merke: '+tabelle(r)};
+}
+
 // ---------- Fragen bauen ----------
 function distract(antwort,kandidaten,n=3){return shuffle([...new Set(kandidaten)].filter(x=>x!==antwort)).slice(0,n)}
 function frPron(id){
   if(id?id[1]==='e':Math.random()<.3){ // Englisch → Deutsch
     const [r,k]=id?[+id[2],id[3]]:rnd(EINDEUTIG),a=P[r][k][0],en=P[r][k][1];
     const kand=shuffle([...['s','o','p'].filter(x=>x!==k).map(x=>P[r][x][0]),...shuffle(P.filter((_,i)=>i!==r)).map(x=>x[k][0])]);
-    return{kat:'pron',id:'pe'+r+k,tag:'Was heißt das auf Deutsch?',html:`<span class="luecke">${esc(en)}</span>`,a,opts:shuffle([a,...distract(a,kand)]),erkl:'Merke: '+tabelle(r),sprich:en};
+    return{kat:'pron',id:'pe'+r+k,tag:'Was heißt das auf Deutsch?',html:`<span class="luecke">${esc(en)}</span>`,a,opts:shuffle([a,...distract(a,kand)]),erkl:'Merke: '+tabelle(r),sprich:en,tippbar:false};
   }
   const r=id?+id[2]:Math.floor(Math.random()*8),k=id?id[3]:rnd(['s','o','p']),a=P[r][k][1];
   const kand=[...['s','o','p'].map(x=>P[r][x][1]),...shuffle(P).map(x=>x[k][1])];
@@ -192,53 +280,99 @@ function frVerb(vi,si){
 }
 const BAU={pron:frPron,satz:frSatz,plural:frPlural,verb:frVerb};
 function ausId(id){ // Falsch beantwortete Frage genauso wieder bauen
+  if(id[0]==='D')return frDoppel(+id.slice(1));
+  if(id[0]==='E')return frErsetz(+id.slice(1));
+  if(id[0]==='R')return frReihe(+id.slice(1));
   if(id[0]==='s')return frSatz(+id.slice(1));
   if(id[0]==='n')return frPlural(+id.slice(1));
   if(id[0]==='v'){const [a,b]=id.slice(1).split('-');return frVerb(+a,+b)}
   return frPron(id);
 }
-// Eine Runde = 150 verschiedene Fragen: alle 44 Lückensätze, 30 Pronomen, 30 Mehrzahl, 46 Verben
+const THEMEN={mix:'Mix',pron:'Pronomen'};
+const gueltig=id=>{try{const x=ausId(id);return!!(x&&x.a&&x.opts.length>=2)}catch(e){return false}};
+// Thema Mix: 150 verschiedene Fragen (44 Lückensätze, 30 Pronomen, 30 Mehrzahl, 46 Verben)
+// Thema Pronomen: alle Doppel-/Dreifach-Sätze, Ersetzen, Dreier-Reihen, alle Lückensätze und Einzelwörter
 function neueRunde(){
+  if(st.thema==='pron'){
+    st.deck=shuffle([...DOPPEL.map((_,i)=>'D'+i),...ERSETZ.map((_,i)=>'E'+i),...P.map((_,r)=>'R'+r),...SAETZE.map((_,i)=>'s'+i),
+      ...shuffle(P.flatMap((_,r)=>['s','o','p'].map(k=>'pd'+r+k))).slice(0,16),...shuffle(EINDEUTIG.map(([r,k])=>'pe'+r+k)).slice(0,6)]);
+    st.pos=0;st.falsch=[];st.n=0;return;
+  }
   const pron=shuffle([...[0,1,2,3,4,5,6,7].flatMap(r=>['s','o','p'].map(k=>'pd'+r+k)),...EINDEUTIG.map(([r,k])=>'pe'+r+k)]).slice(0,30);
   const satz=SAETZE.map((_,i)=>'s'+i);
   const plural=shuffle(NOMEN.map((_,i)=>'n'+i)).slice(0,30);
   const verb=[];VERBEN.forEach((v,vi)=>{for(const mitS of [1,0]){const m=SUBJ.map((x,i)=>i).filter(i=>SUBJ[i][1]===mitS&&(SUBJ[i][2]?v[3]:true));verb.push('v'+vi+'-'+rnd(m))}});
   st.deck=shuffle([...pron,...satz,...plural,...verb]).slice(0,RUNDE);st.pos=0;st.falsch=[];st.n=0;
 }
-if(st.deck.length!==RUNDE)neueRunde();
+if(!THEMEN[st.thema])st.thema='mix';
+if(!st.deck.length||!st.deck.every(gueltig))neueRunde();
 // Falsche Fragen kommen nach 3 bis 5 neuen Fragen wieder – so lange, bis sie richtig sind
 function naechste(){
   const faellig=st.falsch.find(f=>f.due<=st.n)||(st.pos>=st.deck.length&&st.falsch[0]);
   if(faellig){st.falsch=st.falsch.filter(f=>f!==faellig);const q=ausId(faellig.id);q.wieder=true;return q}
-  if(st.pos>=st.deck.length){st.runde++;neueRunde();st.punkte+=20;start('hop',40);buzz(3);setTimeout(()=>say(`Alle ${RUNDE} geschafft! +20 Punkte. Runde ${st.runde} beginnt.`),50)}
+  if(st.pos>=st.deck.length){const n=st.deck.length;st.runde++;neueRunde();st.punkte+=20;start('hop',40);buzz(3);setTimeout(()=>say(`Alle ${n} geschafft! +20 Punkte. Runde ${st.runde} beginnt.`),50)}
   st.n++;return ausId(st.deck[st.pos++]);
 }
 
 // ---------- Ablauf ----------
 let q=null,fertig=false;
+const antworten=x=>x.as||[x.a];
+const norm=s=>String(s).trim().toLowerCase().replace(/[’`´]/g,"'").replace(/\s+/g,' ');
+// Lücken füllen: richtige grün, falsch getippte durchgestrichen + richtige Lösung
+function fuelle(html,as,getippt){
+  let j=0;const teil=i=>{const ok=!getippt||norm(getippt[i])===norm(as[i]);return`<span class="luecke ${getippt?(ok?'ok':'bad'):''}">${!ok?`<s>${esc(getippt[i]||'–')}</s> `:''}${esc(as[i])}</span>`};
+  const neu=html.replace(/<span class="luecke">\?<\/span>/g,()=>teil(j++));
+  return j?neu:html+(getippt?'<br>'+teil(0):'');
+}
 function zeige(){
   q=naechste();fertig=false;
-  $('tag').textContent=q.tag+(q.wieder?' · noch mal!':'');$('frage').innerHTML=q.html;
-  $('erkl').hidden=true;$('weiter').hidden=true;
-  $('opts').innerHTML='';q.opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>antwort(b,o);$('opts').appendChild(b)});
+  // Pronomen-Thema: jede zweite Frage selbst eintippen, Wiederholungen immer eintippen (kein Glückstreffer)
+  q.tipp=st.thema==='pron'&&q.tippbar!==false&&(q.wieder||(st.tipp=!st.tipp));
+  $('tag').innerHTML=esc(q.tag+(q.wieder?' · noch mal!':''))+(st.thema==='pron'?` <span class="modus">· ${q.tipp?'✍ selbst tippen':'☝ antippen'}</span>`:'');
+  $('erkl').hidden=true;$('weiter').hidden=true;$('opts').innerHTML='';$('pruefen').hidden=!q.tipp;
+  if(q.tipp){
+    let j=0;const feld=()=>`<input class="tipp" data-i="${j++}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-label="Lücke ${j}">`;
+    let h=q.html.replace(/<span class="luecke">\?<\/span>/g,feld);if(!j)h+='<br>'+feld();
+    $('frage').innerHTML=h;
+    const felder=[...$('frage').querySelectorAll('input.tipp')];
+    felder.forEach((f,i)=>f.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(felder[i+1])felder[i+1].focus();else pruefe()}});
+    setTimeout(()=>{try{felder[0].focus({preventScroll:true})}catch(e){}},50);
+  }else{
+    $('frage').innerHTML=q.html;
+    $('opts').className='opts'+(q.opts.some(o=>o.length>12)?' lang':'');
+    q.opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>antwort(b,o);$('opts').appendChild(b)});
+  }
   render();save();
 }
 const LOB=['Super!','Richtig!','Klasse!','Genau!','Yes!','Toll!','Perfekt!'];
+function pruefe(){
+  if(fertig||!q.tipp)return;
+  const felder=[...$('frage').querySelectorAll('input.tipp')],getippt=felder.map(f=>f.value);
+  if(getippt.every(v=>!v.trim())){say('Erst eintippen, dann prüfen!');felder[0]?.focus();return}
+  fertig=true;$('pruefen').hidden=true;
+  const as=antworten(q),ok=as.every((a,i)=>norm(getippt[i])===norm(a));
+  $('frage').innerHTML=fuelle(q.html,as,getippt);
+  ergebnis(ok,null);
+}
+$('pruefen').onclick=pruefe;
 function antwort(btn,o){
   if(fertig)return;fertig=true;
   const ok=o===q.a;
   [...$('opts').children].forEach(b=>{b.disabled=true;if(b.textContent===q.a)b.classList.add('ok')});
-  if(q.voll)$('frage').innerHTML=q.html.replace('<span class="luecke">?</span>',`<span class="luecke">${esc(q.a)}</span>`);
+  if(q.voll)$('frage').innerHTML=fuelle(q.html,antworten(q));
+  ergebnis(ok,btn);
+}
+function ergebnis(ok,btn){
   if(ok){
-    st.serie++;st.best=Math.max(st.best,st.serie);st.punkte++;st.satt=clamp(st.satt+6);
+    st.serie++;st.best=Math.max(st.best,st.serie);st.punkte+=antworten(q).length>1||q.tipp?2:1;st.satt=clamp(st.satt+6);
     if(st.serie%5===0){st.punkte+=2;start('hop',24);say(`${st.serie} richtig hintereinander! +2 Bonus`)}else{start('eat',20);say(rnd(LOB)+' Mampf, ein Fisch!')}
     buzz(1);
     sprich(q.voll||q.sprich);
     setTimeout(()=>{if(fertig&&q)zeige()},1300);
   }else{
-    btn.classList.add('bad');st.serie=0;start('turn',30);say(q.wieder?'Noch nicht – die kommt gleich nochmal.':'Fast! Schau mal:');buzz(2);
+    if(btn)btn.classList.add('bad');st.serie=0;start('turn',30);say(q.wieder?'Noch nicht – die kommt gleich nochmal.':'Fast! Schau mal:');buzz(2);
     st.falsch.push({id:q.id,due:st.n+3+Math.floor(Math.random()*3)});
-    $('erkl').className='erkl bad';$('erkl').innerHTML=(q.voll?'':`Richtig ist: <b>${esc(q.a)}</b><br>`)+q.erkl+(q.voll?`<br>✔ <b>${esc(q.voll)}</b>`:'');$('erkl').hidden=false;$('weiter').hidden=false;
+    $('erkl').className='erkl bad';$('erkl').innerHTML=(q.voll||q.tipp?'':`Richtig ist: <b>${esc(q.a)}</b><br>`)+q.erkl+(q.voll?`<br>✔ <b>${esc(q.voll)}</b>`:'');$('erkl').hidden=false;$('weiter').hidden=false;
     sprich(q.voll||q.sprich);
   }
   render();save();
@@ -247,10 +381,12 @@ $('weiter').onclick=()=>zeige();
 function sprich(t){if(!st.ton||!t||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='en-GB';u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
 function render(){
   $('stats').innerHTML=`<span>Satt</span><div class="bar"><i style="width:${st.satt}%"></i></div><span>${Math.round(st.satt)}%</span>`+
-    `<span>Runde ${st.runde}</span><div class="bar"><i style="width:${st.pos/RUNDE*100}%"></i></div><span>${st.pos}/${RUNDE}</span>`+
+    `<span>Runde ${st.runde}</span><div class="bar"><i style="width:${st.pos/st.deck.length*100}%"></i></div><span>${st.pos}/${st.deck.length}</span>`+
     `<span>Punkte</span><span>${st.punkte} · Serie ${st.serie} (Rekord ${st.best})${st.falsch.length?` · ${st.falsch.length} üben`:''}</span><span></span>`;
-  $('b-ton').textContent='Ton: '+(st.ton?'an':'aus');
+  $('b-ton').textContent='Ton: '+(st.ton?'an':'aus');$('b-thema').textContent='Thema: '+THEMEN[st.thema];
 }
+$('b-thema').onclick=()=>{const l=Object.keys(THEMEN);st.thema=l[(l.indexOf(st.thema)+1)%l.length];neueRunde();buzz(1);
+  say(st.thema==='pron'?`Pronomen-Training: ${st.deck.length} Aufgaben, jede zweite tippst du selbst.`:`Neue Runde: Mix (${st.deck.length} Fragen).`);zeige()};
 $('b-spick').onclick=()=>{$('spick').hidden=false;$('spick').scrollTop=0};
 $('zu').onclick=()=>{$('spick').hidden=true};
 $('b-ton').onclick=()=>{st.ton=!st.ton;render();save();if(st.ton)sprich('Hello!')};
@@ -314,8 +450,8 @@ $('b-decke').onclick=()=>{
 };
 setInterval(()=>{nachholen();render();save()},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){nachholen();render()}});
-zeige();frame();say(st.satt<30?'Ich hab Hunger! Jede richtige Antwort ist ein Fisch für mich.':`Hallo! Jede richtige Antwort ist ein Fisch für mich. Runde ${st.runde}: ${RUNDE} Fragen.`);
+zeige();frame();say(st.satt<30?'Ich hab Hunger! Jede richtige Antwort ist ein Fisch für mich.':`Hallo! Jede richtige Antwort ist ein Fisch für mich. Runde ${st.runde}: ${st.deck.length} Fragen.`);
 // Nur für automatische Tests: alle Fragen einmal bauen
-window.ETEST={P,SAETZE,NOMEN,VERBEN,SUBJ,frPron,frSatz,frPlural,frVerb,naechste,neueRunde,ausId};
+window.ETEST={P,SAETZE,NOMEN,VERBEN,SUBJ,DOPPEL,ERSETZ,frPron,frSatz,frPlural,frVerb,frDoppel,frErsetz,frReihe,naechste,neueRunde,ausId,st};
 </script>
 </body></html>
